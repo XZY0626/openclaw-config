@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "defaults": {
+    "requireApproval": true
+  },
+  "agents": {
+    "main": {
+      "allowlist": [
+        "/usr/bin/ls",
+        "/usr/bin/cat",
+        "/usr/bin/head",
+        "/usr/bin/tail",
+        "/usr/bin/wc",
+        "/usr/bin/grep",
+        "/usr/bin/find",
+        "/usr/bin/echo",
+        "/usr/bin/date",
+        "/usr/bin/whoami",
+        "/usr/bin/id",
+        "/usr/bin/uname",
+        "/usr/bin/uptime",
+        "/usr/bin/pwd",
+        "/usr/bin/env",
+        "/usr/bin/which",
+        "/usr/bin/file",
+        "/usr/bin/stat",
+        "/usr/bin/df",
+        "/usr/bin/du",
+        "/usr/bin/free",
+        "/usr/bin/top",
+        "/usr/bin/ps",
+        "/usr/bin/sort",
+        "/usr/bin/uniq",
+        "/usr/bin/cut",
+        "/usr/bin/tr",
+        "/usr/bin/sed",
+        "/usr/bin/awk",
+        "/usr/bin/diff",
+        "/usr/bin/curl",
+        "/usr/bin/wget",
+        "/usr/bin/python3",
+        "/usr/bin/node",
+        "/usr/bin/npm",
+        "/usr/bin/openclaw",
+        "/usr/bin/mkdir",
+        "/usr/bin/touch",
+        "/usr/bin/cp",
+        "/usr/bin/tee"
+      ]
+    }
+  }
+}
