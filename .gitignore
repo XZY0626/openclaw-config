@@ -1,0 +1,13 @@
+# 日志文件
+*.log
+
+# 敏感数据
+known_models.json
+pending_models.json
+
+# Python缓存
+__pycache__/
+*.pyc
+
+# 临时分析脚本
+analyze_frontend*.py
