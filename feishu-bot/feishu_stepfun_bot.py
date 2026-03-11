@@ -42,6 +42,20 @@ MODELS = {
     # 硅基流动
     "sf-deepseek-r1": {"base_url": "https://api.siliconflow.cn/v1", "api_key": "sk-oveedbamrusucbigqmtrnxkwijcrbmjoziwzxrgkxohspnft", "model": "deepseek-ai/DeepSeek-R1", "name": "DeepSeek-R1 (硅基流动)"},
     "sf-deepseek-v3": {"base_url": "https://api.siliconflow.cn/v1", "api_key": "sk-oveedbamrusucbigqmtrnxkwijcrbmjoziwzxrgkxohspnft", "model": "deepseek-ai/DeepSeek-V3", "name": "DeepSeek-V3 (硅基流动)"},
+    # OpenRouter - 免费
+    "step-flash": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "stepfun/step-3.5-flash:free", "name": "★ Step-3.5-Flash (OpenRouter·免费·推理)"},
+    # OpenRouter - OpenAI
+    "gpt-4o": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "openai/gpt-4o", "name": "GPT-4o (OpenRouter)"},
+    "gpt-4o-mini": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "openai/gpt-4o-mini", "name": "GPT-4o-Mini (OpenRouter)"},
+    "o3-mini": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "openai/o3-mini", "name": "O3-Mini (OpenRouter·推理)"},
+    # OpenRouter - Anthropic
+    "claude-sonnet": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "anthropic/claude-3.5-sonnet", "name": "Claude-3.5-Sonnet (OpenRouter)"},
+    "claude-haiku": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "anthropic/claude-3-haiku", "name": "Claude-3-Haiku (OpenRouter·快速)"},
+    # OpenRouter - Google
+    "gemini-flash": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "google/gemini-2.0-flash-001", "name": "Gemini-2.0-Flash (OpenRouter)"},
+    # OpenRouter - Meta & Mistral
+    "llama-70b": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "meta-llama/llama-3.3-70b-instruct", "name": "Llama-3.3-70B (OpenRouter)"},
+    "mistral-large": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "mistralai/mistral-large-2411", "name": "Mistral-Large (OpenRouter)"},
 }
 
 # 默认模型
@@ -143,6 +157,8 @@ def handle_model_command(user_id: str, text: str) -> str:
                 g = "阶跃星辰"
             elif "硅基" in name:
                 g = "硅基流动"
+            elif "OpenRouter" in name:
+                g = "OpenRouter"
             else:
                 g = "其他"
             if g not in groups:
