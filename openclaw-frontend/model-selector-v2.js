@@ -1,5 +1,5 @@
-// OpenClaw 模型选择器插件 v3
-// 修复：改用WebSocket直接发送/model命令，移除不可用的OpenRouter模型，标注平台状态
+// OpenClaw 模型选择器插件 v4
+// v4: OpenRouter Key已恢复，新增Step-3.5-Flash免费模型，全平台可用
 (function() {
   'use strict';
 
@@ -40,18 +40,23 @@
     { id: 'siliconflow/Qwen/Qwen2.5-7B-Instruct', name: 'Qwen2.5-7B (免费)', group: '硅基流动', alias: '', status: 'ok' },
     { id: 'siliconflow/THUDM/glm-4-9b-chat', name: 'GLM-4-9B (免费)', group: '硅基流动', alias: '', status: 'ok' },
     { id: 'siliconflow/internlm/internlm2_5-7b-chat', name: 'InternLM2.5-7B (免费)', group: '硅基流动', alias: '', status: 'ok' },
-    // ===== OpenRouter (API Key待更新) =====
-    { id: 'openrouter/openai/gpt-4o', name: 'GPT-4o', group: 'OpenRouter·OpenAI ⚠️', alias: 'gpt-4o', status: 'key_invalid' },
-    { id: 'openrouter/openai/gpt-4o-mini', name: 'GPT-4o-Mini', group: 'OpenRouter·OpenAI ⚠️', alias: 'gpt-4o-mini', status: 'key_invalid' },
-    { id: 'openrouter/openai/o1', name: 'O1 (推理)', group: 'OpenRouter·OpenAI ⚠️', alias: '', status: 'key_invalid' },
-    { id: 'openrouter/openai/o3-mini', name: 'O3-Mini (推理)', group: 'OpenRouter·OpenAI ⚠️', alias: 'o3-mini', status: 'key_invalid' },
-    { id: 'openrouter/anthropic/claude-3.5-sonnet', name: 'Claude-3.5-Sonnet', group: 'OpenRouter·Anthropic ⚠️', alias: 'claude-sonnet', status: 'key_invalid' },
-    { id: 'openrouter/anthropic/claude-3-opus', name: 'Claude-3-Opus', group: 'OpenRouter·Anthropic ⚠️', alias: '', status: 'key_invalid' },
-    { id: 'openrouter/anthropic/claude-3-haiku', name: 'Claude-3-Haiku (快速)', group: 'OpenRouter·Anthropic ⚠️', alias: '', status: 'key_invalid' },
-    { id: 'openrouter/google/gemini-2.0-flash-001', name: 'Gemini-2.0-Flash', group: 'OpenRouter·Google ⚠️', alias: 'gemini-flash', status: 'key_invalid' },
-    { id: 'openrouter/google/gemini-2.0-pro-exp-02-05', name: 'Gemini-2.0-Pro (实验)', group: 'OpenRouter·Google ⚠️', alias: '', status: 'key_invalid' },
-    { id: 'openrouter/meta-llama/llama-3.3-70b-instruct', name: 'Llama-3.3-70B', group: 'OpenRouter·Meta ⚠️', alias: '', status: 'key_invalid' },
-    { id: 'openrouter/mistralai/mistral-large-2411', name: 'Mistral-Large', group: 'OpenRouter·Mistral ⚠️', alias: '', status: 'key_invalid' },
+    // ===== OpenRouter - 免费模型 =====
+    { id: 'openrouter/stepfun/step-3.5-flash:free', name: '★ Step-3.5-Flash (免费·推理·256K)', group: 'OpenRouter·免费', alias: 'step-flash', status: 'ok' },
+    // ===== OpenRouter - OpenAI =====
+    { id: 'openrouter/openai/gpt-4o', name: 'GPT-4o', group: 'OpenRouter·OpenAI', alias: 'gpt-4o', status: 'ok' },
+    { id: 'openrouter/openai/gpt-4o-mini', name: 'GPT-4o-Mini', group: 'OpenRouter·OpenAI', alias: 'gpt-4o-mini', status: 'ok' },
+    { id: 'openrouter/openai/o1', name: 'O1 (推理)', group: 'OpenRouter·OpenAI', alias: '', status: 'ok' },
+    { id: 'openrouter/openai/o3-mini', name: 'O3-Mini (推理)', group: 'OpenRouter·OpenAI', alias: 'o3-mini', status: 'ok' },
+    // ===== OpenRouter - Anthropic =====
+    { id: 'openrouter/anthropic/claude-3.5-sonnet', name: 'Claude-3.5-Sonnet', group: 'OpenRouter·Anthropic', alias: 'claude-sonnet', status: 'ok' },
+    { id: 'openrouter/anthropic/claude-3-opus', name: 'Claude-3-Opus', group: 'OpenRouter·Anthropic', alias: '', status: 'ok' },
+    { id: 'openrouter/anthropic/claude-3-haiku', name: 'Claude-3-Haiku (快速)', group: 'OpenRouter·Anthropic', alias: '', status: 'ok' },
+    // ===== OpenRouter - Google =====
+    { id: 'openrouter/google/gemini-2.0-flash-001', name: 'Gemini-2.0-Flash', group: 'OpenRouter·Google', alias: 'gemini-flash', status: 'ok' },
+    { id: 'openrouter/google/gemini-2.0-pro-exp-02-05', name: 'Gemini-2.0-Pro (实验)', group: 'OpenRouter·Google', alias: '', status: 'ok' },
+    // ===== OpenRouter - Meta & Mistral =====
+    { id: 'openrouter/meta-llama/llama-3.3-70b-instruct', name: 'Llama-3.3-70B', group: 'OpenRouter·Meta', alias: '', status: 'ok' },
+    { id: 'openrouter/mistralai/mistral-large-2411', name: 'Mistral-Large', group: 'OpenRouter·Mistral', alias: '', status: 'ok' },
   ];
 
   let currentModel = '';
@@ -302,7 +307,7 @@
       + '<input id="oc-ms-search" type="text" placeholder="\u{1F50D} 搜索模型名称、平台或别名..." style="width:100%;padding:10px 16px;border:none;border-bottom:1px solid #333;background:#2a2a3e;color:#e0e0e0;font-size:13px;outline:none;box-sizing:border-box" />'
       + '<div id="oc-ms-list" style="overflow-y:auto;flex:1;max-height:400px;padding:4px 0"></div>'
       + '<div style="padding:8px 16px;border-top:1px solid #333;font-size:11px;color:#666;text-align:center">'
-      + okCount + ' 个可用 | \u26A0\uFE0F OpenRouter Key待更新 | 点击选择即可切换</div>';
+      + okCount + ' 个可用 | 点击选择即可切换</div>';
     document.body.appendChild(panel);
 
     document.getElementById('oc-ms-search').addEventListener('input', (e) => renderList(e.target.value));
@@ -312,7 +317,7 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && panelOpen) togglePanel(false); });
 
     renderList('');
-    console.log('[ModelSelector] v3 loaded -', okCount, 'models available');
+    console.log('[ModelSelector] v4 loaded -', okCount, 'models available');
   }
 
   if (document.body) setTimeout(createUI, 2000);
