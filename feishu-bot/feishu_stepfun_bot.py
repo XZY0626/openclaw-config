@@ -24,38 +24,38 @@ except ImportError:
 # ==================== 配置区 ====================
 # 飞书应用凭证
 FEISHU_APP_ID = "cli_a9251e97b1399cd6"
-FEISHU_APP_SECRET = "C9UQrugDAk89K00HP4g20fKXaZxOewxY"
+FEISHU_APP_SECRET = "FEISHU_SECRET_2_REDACTED"
 
 # 多平台模型配置
 MODELS = {
     # 阿里云百炼
-    "qwen-max": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "sk-d647569dfdf14ab6b9054bce328ab352", "model": "qwen-max-latest", "name": "Qwen-Max (阿里云·旗舰)"},
-    "qwen-plus": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "sk-d647569dfdf14ab6b9054bce328ab352", "model": "qwen-plus-latest", "name": "Qwen-Plus (阿里云·高性能)"},
-    "qwen-turbo": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "sk-d647569dfdf14ab6b9054bce328ab352", "model": "qwen-turbo-latest", "name": "Qwen-Turbo (阿里云·快速)"},
-    "deepseek-r1": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "sk-d647569dfdf14ab6b9054bce328ab352", "model": "deepseek-r1", "name": "DeepSeek-R1 (阿里云·推理)"},
-    "deepseek-v3": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "sk-d647569dfdf14ab6b9054bce328ab352", "model": "deepseek-v3", "name": "DeepSeek-V3 (阿里云·通用)"},
-    "qwq": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "sk-d647569dfdf14ab6b9054bce328ab352", "model": "qwq-32b", "name": "QwQ-32B (阿里云·推理)"},
-    "qwen-coder": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "sk-d647569dfdf14ab6b9054bce328ab352", "model": "qwen2.5-coder-32b-instruct", "name": "Qwen2.5-Coder-32B (阿里云·编程)"},
+    "qwen-max": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "DASHSCOPE_API_KEY_REDACTED", "model": "qwen-max-latest", "name": "Qwen-Max (阿里云·旗舰)"},
+    "qwen-plus": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "DASHSCOPE_API_KEY_REDACTED", "model": "qwen-plus-latest", "name": "Qwen-Plus (阿里云·高性能)"},
+    "qwen-turbo": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "DASHSCOPE_API_KEY_REDACTED", "model": "qwen-turbo-latest", "name": "Qwen-Turbo (阿里云·快速)"},
+    "deepseek-r1": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "DASHSCOPE_API_KEY_REDACTED", "model": "deepseek-r1", "name": "DeepSeek-R1 (阿里云·推理)"},
+    "deepseek-v3": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "DASHSCOPE_API_KEY_REDACTED", "model": "deepseek-v3", "name": "DeepSeek-V3 (阿里云·通用)"},
+    "qwq": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "DASHSCOPE_API_KEY_REDACTED", "model": "qwq-32b", "name": "QwQ-32B (阿里云·推理)"},
+    "qwen-coder": {"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1", "api_key": "DASHSCOPE_API_KEY_REDACTED", "model": "qwen2.5-coder-32b-instruct", "name": "Qwen2.5-Coder-32B (阿里云·编程)"},
     # 阶跃星辰
-    "step-2": {"base_url": "https://api.stepfun.com/v1", "api_key": "2nFoR2tH4n5R0CAe9EE8NVmMISzGjwOBznlSql7xCqwXXFfPSZeDK5yni2wIPu8l", "model": "step-2-16k", "name": "Step-2-16K (阶跃·旗舰)"},
-    "step-1": {"base_url": "https://api.stepfun.com/v1", "api_key": "2nFoR2tH4n5R0CAe9EE8NVmMISzGjwOBznlSql7xCqwXXFfPSZeDK5yni2wIPu8l", "model": "step-1-8k", "name": "Step-1-8K (阶跃·通用)"},
+    "step-2": {"base_url": "https://api.stepfun.com/v1", "api_key": "STEPFUN_API_KEY_REDACTED", "model": "step-2-16k", "name": "Step-2-16K (阶跃·旗舰)"},
+    "step-1": {"base_url": "https://api.stepfun.com/v1", "api_key": "STEPFUN_API_KEY_REDACTED", "model": "step-1-8k", "name": "Step-1-8K (阶跃·通用)"},
     # 硅基流动
-    "sf-deepseek-r1": {"base_url": "https://api.siliconflow.cn/v1", "api_key": "sk-oveedbamrusucbigqmtrnxkwijcrbmjoziwzxrgkxohspnft", "model": "deepseek-ai/DeepSeek-R1", "name": "DeepSeek-R1 (硅基流动)"},
-    "sf-deepseek-v3": {"base_url": "https://api.siliconflow.cn/v1", "api_key": "sk-oveedbamrusucbigqmtrnxkwijcrbmjoziwzxrgkxohspnft", "model": "deepseek-ai/DeepSeek-V3", "name": "DeepSeek-V3 (硅基流动)"},
+    "sf-deepseek-r1": {"base_url": "https://api.siliconflow.cn/v1", "api_key": "SILICONFLOW_API_KEY_REDACTED", "model": "deepseek-ai/DeepSeek-R1", "name": "DeepSeek-R1 (硅基流动)"},
+    "sf-deepseek-v3": {"base_url": "https://api.siliconflow.cn/v1", "api_key": "SILICONFLOW_API_KEY_REDACTED", "model": "deepseek-ai/DeepSeek-V3", "name": "DeepSeek-V3 (硅基流动)"},
     # OpenRouter - 免费
-    "step-flash": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "stepfun/step-3.5-flash:free", "name": "★ Step-3.5-Flash (OpenRouter·免费·推理)"},
+    "step-flash": {"base_url": "https://openrouter.ai/api/v1", "api_key": "sk-or-v1-REDACTED", "model": "stepfun/step-3.5-flash:free", "name": "★ Step-3.5-Flash (OpenRouter·免费·推理)"},
     # OpenRouter - OpenAI
-    "gpt-4o": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "openai/gpt-4o", "name": "GPT-4o (OpenRouter)"},
-    "gpt-4o-mini": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "openai/gpt-4o-mini", "name": "GPT-4o-Mini (OpenRouter)"},
-    "o3-mini": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "openai/o3-mini", "name": "O3-Mini (OpenRouter·推理)"},
+    "gpt-4o": {"base_url": "https://openrouter.ai/api/v1", "api_key": "sk-or-v1-REDACTED", "model": "openai/gpt-4o", "name": "GPT-4o (OpenRouter)"},
+    "gpt-4o-mini": {"base_url": "https://openrouter.ai/api/v1", "api_key": "sk-or-v1-REDACTED", "model": "openai/gpt-4o-mini", "name": "GPT-4o-Mini (OpenRouter)"},
+    "o3-mini": {"base_url": "https://openrouter.ai/api/v1", "api_key": "sk-or-v1-REDACTED", "model": "openai/o3-mini", "name": "O3-Mini (OpenRouter·推理)"},
     # OpenRouter - Anthropic
-    "claude-sonnet": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "anthropic/claude-3.5-sonnet", "name": "Claude-3.5-Sonnet (OpenRouter)"},
-    "claude-haiku": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "anthropic/claude-3-haiku", "name": "Claude-3-Haiku (OpenRouter·快速)"},
+    "claude-sonnet": {"base_url": "https://openrouter.ai/api/v1", "api_key": "sk-or-v1-REDACTED", "model": "anthropic/claude-3.5-sonnet", "name": "Claude-3.5-Sonnet (OpenRouter)"},
+    "claude-haiku": {"base_url": "https://openrouter.ai/api/v1", "api_key": "sk-or-v1-REDACTED", "model": "anthropic/claude-3-haiku", "name": "Claude-3-Haiku (OpenRouter·快速)"},
     # OpenRouter - Google
-    "gemini-flash": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "google/gemini-2.0-flash-001", "name": "Gemini-2.0-Flash (OpenRouter)"},
+    "gemini-flash": {"base_url": "https://openrouter.ai/api/v1", "api_key": "sk-or-v1-REDACTED", "model": "google/gemini-2.0-flash-001", "name": "Gemini-2.0-Flash (OpenRouter)"},
     # OpenRouter - Meta & Mistral
-    "llama-70b": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "meta-llama/llama-3.3-70b-instruct", "name": "Llama-3.3-70B (OpenRouter)"},
-    "mistral-large": {"base_url": "https://openrouter.ai/api/v1", "api_key": "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", "model": "mistralai/mistral-large-2411", "name": "Mistral-Large (OpenRouter)"},
+    "llama-70b": {"base_url": "https://openrouter.ai/api/v1", "api_key": "sk-or-v1-REDACTED", "model": "meta-llama/llama-3.3-70b-instruct", "name": "Llama-3.3-70B (OpenRouter)"},
+    "mistral-large": {"base_url": "https://openrouter.ai/api/v1", "api_key": "sk-or-v1-REDACTED", "model": "mistralai/mistral-large-2411", "name": "Mistral-Large (OpenRouter)"},
 }
 
 # 默认模型
