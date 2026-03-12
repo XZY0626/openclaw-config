@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import paramiko, json
+import paramiko, json, os
 
 host = "192.168.1.100"
 user = "xzy0626"
-pwd = "Xzy0626"
+pwd = os.environ.get("VM_PASSWORD", "YOUR_VM_PASSWORD")
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -17,11 +17,11 @@ config = json.loads(stdout.read().decode("utf-8"))
 providers = config.get("models", {}).get("providers", {})
 
 if "siliconflow" in providers:
-    providers["siliconflow"]["apiKey"] = "sk-oveedbamrusucbigqmtrnxkwijcrbmjoziwzxrgkxohspnft"
+    providers["siliconflow"]["apiKey"] = os.environ.get("SILICONFLOW_API_KEY", "YOUR_SILICONFLOW_API_KEY")
     print("✅ 硅基流动 API Key 已更新")
 
 if "openrouter" in providers:
-    providers["openrouter"]["apiKey"] = "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"
+    providers["openrouter"]["apiKey"] = os.environ.get("OPENROUTER_API_KEY", "YOUR_OPENROUTER_API_KEY")
     print("✅ OpenRouter API Key 已更新")
 
 # 备份并写入
