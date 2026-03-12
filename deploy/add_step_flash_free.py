@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """更新OpenRouter API Key + 添加step-3.5-flash:free模型"""
-import paramiko, json
+import paramiko, json, os
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -14,7 +14,7 @@ providers = config.get("models", {}).get("providers", {})
 
 # 1. 更新OpenRouter API Key
 if "openrouter" in providers:
-    providers["openrouter"]["apiKey"] = "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"
+    providers["openrouter"]["apiKey"] = os.environ.get("OPENROUTER_API_KEY", "YOUR_OPENROUTER_API_KEY")
     print("✅ OpenRouter API Key已更新")
 
     # 2. 添加step-3.5-flash:free模型（检查是否已存在）

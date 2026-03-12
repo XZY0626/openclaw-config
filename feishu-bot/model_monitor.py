@@ -23,29 +23,29 @@ from openai import OpenAI
 # ==================== 配置 ====================
 # 飞书机器人（阶跃AI助手）
 FEISHU_APP_ID = "cli_a9251e97b1399cd6"
-FEISHU_APP_SECRET = "C9UQrugDAk89K00HP4g20fKXaZxOewxY"
+FEISHU_APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "YOUR_FEISHU_APP_SECRET")
 
 # 各平台API配置
 PLATFORMS = {
     "stepfun": {
         "name": "阶跃星辰",
         "base_url": "https://api.stepfun.com/v1",
-        "api_key": "2nFoR2tH4n5R0CAe9EE8NVmMISzGjwOBznlSql7xCqwXXFfPSZeDK5yni2wIPu8l",
+        "api_key": os.environ.get("STEPFUN_API_KEY", "YOUR_STEPFUN_API_KEY"),
     },
     "dashscope": {
         "name": "阿里云百炼",
         "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "api_key": "sk-d647569dfdf14ab6b9054bce328ab352",
+        "api_key": os.environ.get("DASHSCOPE_API_KEY", "YOUR_DASHSCOPE_API_KEY"),
     },
     "siliconflow": {
         "name": "硅基流动",
         "base_url": "https://api.siliconflow.cn/v1",
-        "api_key": "sk-oveedbamrusucbigqmtrnxkwijcrbmjoziwzxrgkxohspnft",
+        "api_key": os.environ.get("SILICONFLOW_API_KEY", "YOUR_SILICONFLOW_API_KEY"),
     },
     "openrouter": {
         "name": "OpenRouter",
         "base_url": "https://openrouter.ai/api/v1",
-        "api_key": "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",
+        "api_key": os.environ.get("OPENROUTER_API_KEY", "YOUR_OPENROUTER_API_KEY"),
     },
 }
 

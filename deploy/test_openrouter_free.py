@@ -11,7 +11,7 @@ payload = json.dumps({
     "max_tokens": 20
 })
 
-cmd = f"""curl -s -X POST -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{payload}' 'https://openrouter.ai/api/v1/chat/completions'"""
+cmd = f"""curl -s -X POST -H 'Authorization: Bearer {os.environ.get("OPENROUTER_API_KEY", "YOUR_OPENROUTER_API_KEY")}' -H 'Content-Type: application/json' -d '{payload}' 'https://openrouter.ai/api/v1/chat/completions'"""
 
 stdin, stdout, stderr = client.exec_command(cmd, timeout=30)
 out = stdout.read().decode()
