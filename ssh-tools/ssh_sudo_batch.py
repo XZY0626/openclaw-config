@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import paramiko
+import os
 import sys
 import time
 
 host = "192.168.1.100"
 user = "xzy0626"
-pwd = "Xzy0626"
+pwd = os.environ.get("VM_PASSWORD", "YOUR_VM_PASSWORD_HERE")
 
 cmds = sys.argv[1:]
 

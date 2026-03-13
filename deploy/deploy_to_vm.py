@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 """
 部署脚本：将备份/恢复/监控脚本部署到虚拟机，并设置crontab
+⚠️ 安全须知（L0.6/L0.7）：
+  - 禁止在本文件中硬编码任何密码或密钥
+  - 运行前请先设置环境变量：set VM_PASSWORD=你的虚拟机密码
+  - 或在 .env 文件中配置（.env 已加入 .gitignore，不会上传GitHub）
 """
 import paramiko
 import os
 
 host = "192.168.1.100"
 user = "xzy0626"
-pwd = "Xzy0626"
+# ⚠️ 请通过环境变量提供密码：set VM_PASSWORD=你的密码
+pwd = os.environ.get("VM_PASSWORD", "YOUR_VM_PASSWORD_HERE")
 
 SCRIPTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "openclaw-scripts")
 

@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """部署更新后的前端选择器到虚拟机"""
 import paramiko
+import os
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect("192.168.1.100", port=22, username="xzy0626", password="Xzy0626", timeout=10)
+client.connect("192.168.1.100", port=22, username="xzy0626", password=os.environ.get("VM_PASSWORD", "YOUR_VM_PASSWORD_HERE"), timeout=10)
 
 # 上传新JS
 sftp = client.open_sftp()
@@ -16,7 +17,7 @@ sftp.close()
 
 # sudo复制到assets
 stdin, stdout, stderr = client.exec_command(
-    "echo 'Xzy0626' | sudo -S cp /tmp/model-selector-v2.js /usr/lib/node_modules/openclaw/dist/control-ui/assets/model-selector-v2.js",
+    "echo '{pwd}' | sudo -S cp /tmp/model-selector-v2.js /usr/lib/node_modules/openclaw/dist/control-ui/assets/model-selector-v2.js",
     timeout=10
 )
 stderr.read()
@@ -36,7 +37,7 @@ print("index.html引用:", ref if ref else "❌ 未找到引用")
 if not ref:
     # 重新注入
     stdin, stdout, stderr = client.exec_command(
-        "echo 'Xzy0626' | sudo -S sed -i 's|</body>|    <script src=\"./assets/model-selector-v2.js\"></script>\\n  </body>|' /usr/lib/node_modules/openclaw/dist/control-ui/index.html",
+        "echo '{pwd}' | sudo -S sed -i 's|</body>|    <script src=\"./assets/model-selector-v2.js\"></script>\\n  </body>|' /usr/lib/node_modules/openclaw/dist/control-ui/index.html",
         timeout=10
     )
     print("已重新注入引用")

@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import paramiko
+import os
 import sys
 import json
 
 host = "192.168.1.100"
 user = "xzy0626"
-pwd = "Xzy0626"
+pwd = os.environ.get("VM_PASSWORD", "YOUR_VM_PASSWORD_HERE")
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())

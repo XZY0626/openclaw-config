@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import paramiko
+import os
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect("192.168.1.100", port=22, username="xzy0626", password="Xzy0626", timeout=10)
+client.connect("192.168.1.100", port=22, username="xzy0626", password=os.environ.get("VM_PASSWORD", "YOUR_VM_PASSWORD_HERE"), timeout=10)
 
 # 直接写一个干净的index.html
 clean_html = """<!doctype html>
@@ -32,7 +33,7 @@ with sftp.open("/tmp/openclaw-index-clean.html", "w") as f:
 sftp.close()
 
 stdin, stdout, stderr = client.exec_command(
-    "echo 'Xzy0626' | sudo -S cp /tmp/openclaw-index-clean.html /usr/lib/node_modules/openclaw/dist/control-ui/index.html",
+    "echo '{pwd}' | sudo -S cp /tmp/openclaw-index-clean.html /usr/lib/node_modules/openclaw/dist/control-ui/index.html",
     timeout=10
 )
 stderr.read()

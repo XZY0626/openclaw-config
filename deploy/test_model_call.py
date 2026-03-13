@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-import paramiko, time
+import paramiko
+import os, time
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect("192.168.1.100", port=22, username="xzy0626", password="Xzy0626", timeout=10)
+client.connect("192.168.1.100", port=22, username="xzy0626", password=os.environ.get("VM_PASSWORD", "YOUR_VM_PASSWORD_HERE"), timeout=10)
 
 # 测试各平台模型调用
 tests = [

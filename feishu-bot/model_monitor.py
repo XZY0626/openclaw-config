@@ -50,9 +50,12 @@ PLATFORMS = {
 }
 
 # 虚拟机SSH配置
+# ⚠️ 安全提示：请将 VM_PASSWORD 环境变量设置为虚拟机实际密码，禁止硬编码
+# 设置方法（Windows宿主机 PowerShell）：
+#   $env:VM_PASSWORD = "你的虚拟机密码"
 VM_HOST = "192.168.1.100"
 VM_USER = "xzy0626"
-VM_PASS = "Xzy0626"
+VM_PASS = os.environ.get("VM_PASSWORD", "YOUR_VM_PASSWORD_HERE")
 
 # 数据文件路径
 SCRIPT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
