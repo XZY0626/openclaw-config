@@ -1,5 +1,5 @@
-// OpenClaw 模型选择器插件 v4
-// v4: OpenRouter Key已恢复，新增Step-3.5-Flash免费模型，全平台可用
+// OpenClaw 模型选择器插件 v5
+// v5: 新增MiniMax模型（MiniMax-Text-01、MiniMax-M1、MiniMax-M2.5、MiniMax-M2.5-highspeed）
 (function() {
   'use strict';
 
@@ -57,6 +57,11 @@
     // ===== OpenRouter - Meta & Mistral =====
     { id: 'openrouter/meta-llama/llama-3.3-70b-instruct', name: 'Llama-3.3-70B', group: 'OpenRouter·Meta', alias: '', status: 'ok' },
     { id: 'openrouter/mistralai/mistral-large-2411', name: 'Mistral-Large', group: 'OpenRouter·Mistral', alias: '', status: 'ok' },
+    // ===== MiniMax =====
+    { id: 'minimax/MiniMax-Text-01', name: 'MiniMax-Text-01 (旗舰通用·100万上下文)', group: 'MiniMax', alias: 'minimax-text', status: 'ok' },
+    { id: 'minimax/MiniMax-M1', name: 'MiniMax-M1 (推理旗舰·100万上下文)', group: 'MiniMax', alias: 'minimax-m1', status: 'ok' },
+    { id: 'minimax/MiniMax-M2.5', name: '★ MiniMax-M2.5 (最新旗舰·推理)', group: 'MiniMax', alias: 'minimax', status: 'ok' },
+    { id: 'minimax/MiniMax-M2.5-highspeed', name: 'MiniMax-M2.5-HighSpeed (快速·推理)', group: 'MiniMax', alias: 'minimax-fast', status: 'ok' },
   ];
 
   let currentModel = '';
