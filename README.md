@@ -17,6 +17,8 @@
   - [Gateway（网关服务）](#gateway网关服务)
   - [规则文件体系（workspace）](#规则文件体系workspace)
   - [记忆体系（Memory）](#记忆体系memory)
+  - [Memory Search（向量语义检索）](#memory-search向量语义检索)
+  - [模型体系](#模型体系)
   - [心跳机制](#心跳机制)
   - [MCP 工具](#mcp-工具)
   - [Skills 技能文件](#skills-技能文件)
@@ -31,41 +33,55 @@
 ## 整体架构
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│  宿主机（Windows）                                                    │
-│                                                                       │
-│  ┌─────────────┐    ┌──────────────────┐    ┌────────────────────┐  │
-│  │  WorkBuddy  │    │  飞书 PC 客户端   │    │  Windows 定时任务   │  │
-│  │  (AI助手)   │    │  （主人使用）     │    │  每天 03:00        │  │
-│  └──────┬──────┘    └────────┬─────────┘    │  从 GitHub 拉规则  │  │
-│         │SSH                  │飞书API        └────────┬───────────┘  │
-└─────────┼────────────────────┼─────────────────────────┼─────────────┘
-          │                    │                          │
-          ▼                    ▼                          ▼ SSH
-┌─────────────────────────────────────────────────────────────────────┐
-│  虚拟机（Ubuntu，内网 192.168.x.x）                                  │
-│                                                                       │
-│  ┌──────────────────────────────────────────────────────────────┐   │
-│  │  openclaw-gateway（用户级 systemd 服务）                       │   │
-│  │                                                                │   │
-│  │  ┌────────────────┐    ┌──────────────┐    ┌──────────────┐  │   │
-│  │  │  bind: loopback│    │  MCP 工具层   │    │ workspace/   │  │   │
-│  │  │  只监听 127.0.0│    │ filesystem   │    │ 规则文件体系  │  │   │
-│  │  │  不暴露公网     │    │ fetch        │    │ AGENTS.md    │  │   │
-│  │  └────────────────┘    │ websearch    │    │ AI_RULES.md  │  │   │
-│  │                        │ desktop-cmd  │    │ SOUL.md...   │  │   │
-│  │  ┌────────────────┐    └──────────────┘    └──────────────┘  │   │
-│  │  │  飞书长连接     │                                           │   │
-│  │  │  收消息→执行    │    ┌──────────────┐                      │   │
-│  │  │  →回复          │    │ memory/ 记忆  │                      │   │
-│  │  └────────────────┘    │ 日记+计数器   │                      │   │
-│  └────────────────────────┴──────────────┴──────────────────────┘   │
-│                                                                       │
-│  ┌────────────────────────────────────────────────────────────────┐  │
-│  │  Tailscale（system 级 systemd 服务）                            │  │
-│  │  tailscale serve → 把 127.0.0.1:port 转发到 HTTPS 公网地址     │  │
-│  └─────────────────────────────────┬──────────────────────────────┘  │
-└─────────────────────────────────────┼───────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│  宿主机（Windows）                                                        │
+│                                                                           │
+│  ┌─────────────┐    ┌──────────────────┐    ┌────────────────────────┐  │
+│  │  WorkBuddy  │    │  飞书 PC 客户端   │    │  Windows 定时任务       │  │
+│  │  (AI助手)   │    │  （主人使用）     │    │  每天 03:00            │  │
+│  └──────┬──────┘    └────────┬─────────┘    │  从 GitHub 拉规则      │  │
+│         │SSH                  │飞书API        └──────────┬─────────────┘  │
+└─────────┼────────────────────┼────────────────────────  ─┼───────────────┘
+          │                    │                            │
+          ▼                    ▼                            ▼ SSH
+┌─────────────────────────────────────────────────────────────────────────┐
+│  虚拟机（Ubuntu，内网 192.168.x.x）                                       │
+│                                                                           │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │  openclaw-gateway（用户级 systemd 服务）                            │  │
+│  │                                                                     │  │
+│  │  ┌─────────────┐  ┌──────────────┐  ┌──────────────────────────┐  │  │
+│  │  │bind: loopback│  │  MCP 工具层   │  │  workspace/ 规则文件体系  │  │  │
+│  │  │只听127.0.0.1 │  │ filesystem   │  │  AGENTS.md  AI_RULES.md  │  │  │
+│  │  │不暴露公网    │  │ fetch        │  │  SOUL.md    USER.md       │  │  │
+│  │  └─────────────┘  │ websearch    │  │  TOOLS.md   KNOWLEDGE_BASE│  │  │
+│  │                    │ desktop-cmd  │  │  skills/（8个Skill文件）   │  │  │
+│  │  ┌─────────────┐  └──────────────┘  └──────────────────────────┘  │  │
+│  │  │ 飞书长连接   │                                                   │  │
+│  │  │ 收消息→执行  │  ┌──────────────────────────────────────────┐   │  │
+│  │  │ →回复        │  │  Memory Search（向量语义检索）             │   │  │
+│  │  └─────────────┘  │                                          │   │  │
+│  │                    │  ┌──────────────┐   ┌─────────────────┐  │   │  │
+│  │                    │  │ 对话模型     │   │ Embedding 模型  │  │   │  │
+│  │                    │  │ (StepFun/    │   │ Qwen            │  │   │  │
+│  │                    │  │  Qwen/etc.)  │   │ text-embedding  │  │   │  │
+│  │                    │  │ 生成回答     │   │ -v3             │  │   │  │
+│  │                    │  └──────┬───────┘   │ 向量检索文档    │  │   │  │
+│  │                    │         │ 接收检索到  └───────┬─────────┘  │   │  │
+│  │                    │         │ 的上下文片段          │ 找相关文档  │   │  │
+│  │                    │  ┌──────▼──────────────────────▼─────────┐  │   │  │
+│  │                    │  │  SQLite 向量数据库（main.sqlite）       │  │   │  │
+│  │                    │  │  65 文件 · 143 chunks · 1024维向量      │  │   │  │
+│  │                    │  │  索引范围：memory/ + workspace/         │  │   │  │
+│  │                    │  └────────────────────────────────────────┘  │   │  │
+│  │                    └──────────────────────────────────────────────┘   │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│                                                                               │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │  Tailscale（system 级 systemd 服务）                                    │  │
+│  │  tailscale serve --bg → 把 127.0.0.1:port 转发到 HTTPS 公网地址        │  │
+│  └─────────────────────────────────┬──────────────────────────────────────┘  │
+└─────────────────────────────────────┼─────────────────────────────────────────┘
                                       │ HTTPS（加密，需 Tailscale 鉴权）
                                       ▼
                          https://xzy0626-vmware-virtual-platform
@@ -106,7 +122,7 @@ Tailscale 网络（只有加入了 tailnet 的设备才能访问）
     │
     ▼
 虚拟机内的 Tailscale 守护进程
-    │ tailscale serve 命令把流量转发到本机
+    │ tailscale serve --bg 命令把流量转发到本机
     ▼
 127.0.0.1:PORT（gateway 只听本机）
     │
@@ -121,10 +137,10 @@ OpenClaw Gateway（处理请求）
 | `gateway.bind` | `loopback`（只听 127.0.0.1） | 安全：不暴露公网端口 |
 | `gateway.tailscale.mode` | `serve` | 让 Tailscale 做 HTTPS 代理 |
 | Tailscale 服务级别 | `system`（系统级 systemd） | 开机自启，无需登录 |
-| `tailscale serve` 启动方式 | 以 `--bg` 后台方式运行 | 长驻进程 |
+| `tailscale serve` 服务类型 | `oneshot`（启动后进程退出） | 执行 `--bg` 后台注册即结束，serve 配置由 `tailscaled` 持久维护 |
 | 对外 HTTPS 地址 | `.tail6f9a39.ts.net`（脱敏） | 固定域名，Tailscale 自动续签证书 |
 
-**意思是**：即使虚拟机没有公网 IP，只要虚拟机能访问互联网，主人在任何地方（手机/笔记本/其他电脑）只要登了同一个 Tailscale 账号，就能通过 HTTPS 地址访问龙虾。
+> **注意**：`systemctl status tailscale-serve` 显示 `inactive` 是**正常现象**——该服务是 oneshot 类型，`ExecStart` 执行 `tailscale serve --bg 18789` 完成后进程退出，serve 代理持续运行中，`curl` 测试验证 HTTP 200。
 
 ---
 
@@ -177,7 +193,10 @@ workspace/
     ├── task-planner.md
     ├── workbuddy-dna.md
     ├── github-sync.md
-    └── feishu-file-reader.md
+    ├── feishu-file-reader.md
+    ├── knowledge-notebook.md   ← 2026-03-15 新增
+    ├── knowledge-ingest.md     ← 2026-03-15 新增
+    └── scrapling/              ← 动态网页抓取（Playwright 支持）
 ```
 
 **规则优先级**（从高到低）：
@@ -202,23 +221,133 @@ L0 (AI_RULES.md) > SOUL.md > USER.md > AGENTS.md > 用户请求
 
 ```
 workspace/memory/
-├── YYYY-MM-DD.md         ← 每日日记（对话结束时写入）
+├── YYYY-MM-DD.md                     ← 每日日记（对话结束时写入）
 │   内容：今天做了什么、遇到什么问题、明天要做什么
 │
-├── round_counter.txt     ← 对话轮数计数器
+├── 主题笔记.md                        ← 知识笔记（通过 knowledge-ingest 写入）
+│   例：2026-03-15-note-openclaw-embedding-setup.md
+│       2026-03-15-embedding-provider-strategy.md
+│       2026-03-15-OpenClaw系统配置和技术说明.md
+│
+├── round_counter.txt                 ← 对话轮数计数器
 │   作用：每 10 轮强制重读 AI_RULES.md，防止规则被「聊忘了」
 │
-└── rule_sync_time.txt    ← 规则最后同步时间
-    作用：超过 48 小时未同步 → 提醒主人检查定时任务
+├── rule_sync_time.txt                ← 规则最后同步时间
+│   作用：超过 48 小时未同步 → 提醒主人检查定时任务
+│
+└── last_heartbeat.txt                ← 心跳时间戳
+    作用：记录最近一次健康自检时间
 ```
 
 > **注意安全规则**：`MEMORY.md`（长期重要记忆）只在**一对一私聊**中加载，群聊中不加载，防止个人信息泄露。
 
 ---
 
+### Memory Search（向量语义检索）
+
+这是 2026-03-15 正式投入运行的新能力，让龙虾可以从几十个文件里**语义搜索**相关内容，而不只是依赖有限的上下文窗口。
+
+#### 工作原理
+
+```
+你对龙虾提问
+      ↓
+──────────────────────────────────────────────────────
+[阶段 1]  Qwen text-embedding-v3 出场（Embedding 模型）
+          把你的问题转成 1024 维向量
+          例：[0.21, -0.83, 0.45, ... 共1024个]
+          在 SQLite 向量数据库里找「距离最近」的文档块
+          找到：memory/某笔记.md 里的相关段落
+          相似度分数：0.40 ~ 0.75
+──────────────────────────────────────────────────────
+[阶段 2]  上下文拼装
+          把找到的段落插入对话上下文：
+          <memory>...找到的相关内容...</memory>
+──────────────────────────────────────────────────────
+[阶段 3]  对话模型出场（StepFun / Qwen / Hunter 等）
+          收到：[找到的记忆片段] + [你的问题]
+          生成回答
+```
+
+**关键点**：Embedding 模型和对话模型是**完全独立**的两件事，互不干扰，可以任意组合切换。
+
+#### 当前配置
+
+| 配置项 | 值 |
+|--------|-----|
+| Embedding 模型 | `Qwen text-embedding-v3`（阿里云 DashScope） |
+| 向量维度 | 1024 |
+| 数据库 | SQLite + `sqlite-vec` 插件 |
+| 数据库路径 | `~/.openclaw/memory/main.sqlite` |
+| 索引范围 | `memory/`（日记+笔记）+ `~/.openclaw/workspace/`（规则文件） |
+| 当前索引量 | 65 文件 · 143 chunks |
+| 状态 | ✅ Vector: ready，Embeddings: ready |
+
+#### 为什么用 Qwen Embedding
+
+| 方案 | 费用 | 中文效果 | 备注 |
+|------|------|---------|------|
+| **Qwen text-embedding-v3（当前）** | 0.0007元/千token，全量重建<2分钱 | ⭐⭐⭐⭐⭐ | **推荐，现用** |
+| OpenAI text-embedding-3-small | $0.02/百万token | ⭐⭐⭐⭐ | 换 baseUrl+apiKey 即可 |
+| Ollama nomic-embed-text | 完全免费 | ⭐⭐⭐ | 需虚拟机装 Ollama |
+| Gemini text-embedding-004 | Google 大额免费额度 | ⭐⭐⭐ | 需 Google API Key |
+
+> **费用监控**：阿里云百炼控制台 → 用量与账单 → [https://bailian.console.aliyun.com/](https://bailian.console.aliyun.com/)
+
+#### 如何向记忆库投喂知识
+
+| 方式 | 操作 | 适合场景 |
+|------|------|---------|
+| 直接粘贴 | 对龙虾说「存入记忆库，主题是XXX：[内容]」 | 短文本、笔记 |
+| 飞书文档 | 「把这个飞书文档收录到知识库：[链接]」 | 长文档 |
+| 本地文件 | 「把 /path/to/file.md 加入知识库」 | 现有文件 |
+| 永久规则 | 让龙虾写进 AGENTS.md | 需每次遵守的规则 |
+
+验证方式：让龙虾执行 `openclaw memory search "关键词"` 确认命中且 score > 0.4。
+
+---
+
+### 模型体系
+
+龙虾配置了 22 个模型，覆盖多个平台，可按任务特点切换。
+
+#### 配置总览
+
+| 别名 | 模型 ID | 上下文 | 模态 | 平台 | 特点 |
+|------|---------|--------|------|------|------|
+| `qwen-max` | dashscope-qwen/qwen-max-latest | 31k | 文本 | 阿里云 | 高质量推理 |
+| `qwen-plus` | dashscope-qwen/qwen-plus-latest | 128k | 文本 | 阿里云 | 均衡性价比 |
+| `qwen-turbo` | dashscope-qwen/qwen-turbo-latest | 977k | 文本 | 阿里云 | 超长上下文 |
+| `qwen-long` | dashscope-qwen/qwen-long | 9766k | 文本 | 阿里云 | 极长上下文 |
+| `qwen-coder` | dashscope-qwen-coder/qwen2.5-coder-32b-instruct | 128k | 文本 | 阿里云 | 代码专用 |
+| `qwq` | dashscope-reasoning/qwq-32b | 128k | 文本 | 阿里云 | 深度推理 |
+| `qwen3` | dashscope-reasoning/qwen3-235b-a22b | 128k | 文本 | 阿里云 | MoE 大模型 |
+| `qwen-vl` | dashscope-vision/qwen-vl-max-latest | 31k | 文本+图片 | 阿里云 | 视觉理解 |
+| `deepseek-r1` | dashscope-deepseek/deepseek-r1 | 64k | 文本 | 阿里云路由 | 深度推理 |
+| `deepseek-v3` | dashscope-deepseek/deepseek-v3 | 64k | 文本 | 阿里云路由 | 通用强模型 |
+| `sf-deepseek-r1` | siliconflow/deepseek-ai/DeepSeek-R1 | 64k | 文本 | 硅基流动 | DeepSeek R1 备用 |
+| `sf-deepseek-v3` | siliconflow/deepseek-ai/DeepSeek-V3 | 64k | 文本 | 硅基流动 | DeepSeek V3 备用 |
+| `step-2` | stepfun/step-2-16k | 16k | 文本 | StepFun | 快速对话 |
+| `step-1` | stepfun/step-1-8k | 8k | 文本 | StepFun | 轻量任务 |
+| `minimax` | minimax/MiniMax-M2.5 | 200k | 文本 | MiniMax | 长上下文对话 |
+| `minimax-fast` | minimax/MiniMax-M2.5-highspeed | 200k | 文本 | MiniMax | 高速版 |
+| `minimax-text` | minimax/MiniMax-Text-01 | 977k | 文本 | MiniMax | 超长上下文 |
+| `minimax-m1` | minimax/MiniMax-M1 | 977k | 文本 | MiniMax | M1 旗舰 |
+| **`hunter-alpha`** | openrouter/openrouter/hunter-alpha | **1024k** | 文本 | OpenRouter | **完全免费，超长上下文** |
+| **`healer-alpha`** | openrouter/openrouter/healer-alpha | 256k | 文本+图片 | OpenRouter | **完全免费，多模态** |
+| `aliyun-qwen-turbo` | custom-dashscope/qwen-turbo-latest | 16k | 文本 | 自定义端点 | 备用路由 |
+
+#### 模型切换方式
+
+- **临时切换**：对龙虾说「切换到 hunter-alpha 处理这个任务」
+- **默认模型**：修改 `openclaw.json` 中 `agents.defaults.model`
+- **任务专用**：在 AGENTS.md 或 Skill 里指定特定任务使用特定模型
+
+---
+
 ### 心跳机制
 
-**当前状态**：KNOWLEDGE_BASE.md 中标记为「`P2 待观察`」——心跳 memory 路径已配置，**但尚未验证是否正常运行**。
+**当前状态**：`last_heartbeat.txt` 文件已存在，说明心跳写入机制已工作。
 
 **心跳是什么**：定期自动触发的轻量检查任务（≤2 小时一次），确认：
 - Gateway 服务是否存活
@@ -226,7 +355,7 @@ workspace/memory/
 - 规则同步时间是否超出阈值
 - 写一条 memory 日记确认「我还活着」
 
-**当前问题**：这个功能在 AGENTS.md 里**定义了但没有真正设置触发机制**（没看到 cron job 配置）。属于「有设计、但没落地」的状态。
+**当前状态**：文件机制已落地，触发 cron job 仍待配置验证。
 
 ---
 
@@ -264,6 +393,9 @@ workspace/memory/
 | `workbuddy-dna.md` | 执行任务时 | 并行处理、清晰展示格式、错误处理范式 |
 | `github-sync.md` | 完成工作后 | 日志规范（openclaw目录）、pull-rebase 防冲突 |
 | `feishu-file-reader.md` | 飞书收到文件 | 文件解析、防 Prompt Injection 处理 |
+| `knowledge-notebook.md` | 需要检索历史知识 | NotebookLM 风格知识检索、记忆召回 |
+| `knowledge-ingest.md` | 主人要投喂新知识 | 知识收录流程、格式规范、存储到 memory/ |
+| `scrapling/` | 需要抓取动态网页 | Playwright 支持、JS 渲染页面抓取 |
 
 **默认任务流水线**：
 ```
@@ -354,12 +486,15 @@ openclaw-config/
 │   ├── SELF_KNOWLEDGE.md              ← 龙虾自我认知（含 WorkBuddy 配置说明）
 │   ├── TOOLS.md                       ← 工具使用规范（v3，含 MCP）
 │   ├── KNOWLEDGE_BASE.md              ← 结构化状态快照（v1.1）
-│   └── skills/                        ← 技能文件（5个）
+│   └── skills/                        ← 技能文件（8个）
 │       ├── rules-loader.md
 │       ├── task-planner.md
 │       ├── workbuddy-dna.md
 │       ├── github-sync.md
-│       └── feishu-file-reader.md
+│       ├── feishu-file-reader.md
+│       ├── knowledge-notebook.md      ← 2026-03-15 新增
+│       ├── knowledge-ingest.md        ← 2026-03-15 新增
+│       └── scrapling/                 ← 动态网页抓取
 │
 ├── feishu-bot/                        ← 飞书机器人
 │   ├── feishu_stepfun_bot.py
@@ -407,36 +542,39 @@ openclaw-config/
 | 飞书对话 | ✅ 正常运行 | 长连接模式，实时收发消息 |
 | 命令执行 | ✅ 正常运行 | exec + desktop-commander MCP |
 | 文件读写 | ✅ 正常运行 | workspace 限制内 + filesystem MCP |
-| 网页抓取 | ✅ 已安装 | fetch MCP（静态页面完美，动态页面待升级） |
+| 网页抓取 | ✅ 已安装 | fetch MCP（静态）+ scrapling Skill（动态/JS渲染） |
 | 网络搜索 | ✅ 已安装 | websearch MCP（免费方案） |
 | 合规门禁 | ✅ 运行中 | L0 硬性拒绝 + 10轮重读机制 |
 | GitHub 日志同步 | ✅ 正常运行 | github-sync.md v3 + pull-rebase 规范 |
 | 规则自动同步 | ✅ 已配置 | Windows 定时任务，每天 03:00 |
 | 审批机制 | ✅ 已配置 | exec-approvals.json 白名单 |
 | 版本自检 | ✅ 已配置 | AGENTS.md checksum + 启动时验证 |
-| 记忆体系 | ✅ 已配置 | memory/ 日记 + round_counter |
+| 记忆体系（日记） | ✅ 已配置 | memory/ 日记 + round_counter |
+| **Memory Search** | ✅ **正式运行** | **Qwen text-embedding-v3，65文件143块，Vector ready** |
+| **语义知识检索** | ✅ **正式运行** | **knowledge-notebook Skill，语义搜索历史记忆** |
+| **知识投喂** | ✅ **正式运行** | **knowledge-ingest Skill，主人可随时向记忆库写入新知识** |
+| **多模型体系** | ✅ **22个模型** | **含 Hunter/Healer Alpha（OpenRouter免费）、Qwen3、MiniMax M2.5等** |
 
 ### 🟡 有设计但未完全落地的能力
 
 | 能力 | 设计位置 | 问题 | 建议 |
 |------|---------|------|------|
-| **心跳机制** | AGENTS.md + KNOWLEDGE_BASE.md | 设计了但没有 cron job 实际触发 | 在虚拟机上设置 crontab：每 2 小时执行一次轻量检查脚本 |
-| **rule_sync_time.txt 验证** | AGENTS.md 启动检查清单第 8 项 | 启动时会读这个文件，但文件是否被定时任务维护未验证 | 定时任务写入后验证文件内容格式是否正确 |
+| **心跳 cron 触发** | AGENTS.md + last_heartbeat.txt | 文件已存在，但触发 cron 未验证 | 在虚拟机上 `crontab -l` 确认是否有心跳任务 |
+| **rule_sync_time.txt 验证** | AGENTS.md 启动检查清单第 8 项 | 文件格式是否被定时任务正确维护未验证 | 定时任务写入后验证文件内容格式是否正确 |
 | **round_counter.txt** | AGENTS.md 第 7 项 | 龙虾能读写，但计数逻辑依赖龙虾自觉执行 | 可在 rules-loader.md 里加强检查逻辑 |
 | **MEMORY.md（长期记忆）** | AGENTS.md Memory 章节 | 定义了但未见到有实际内容 | 安排龙虾做一次「整理长期记忆」任务，把之前操作日志里的重要内容提炼进去 |
-| **INDEX.md 日志索引** | github-sync.md | 有规范但内容可能空缺 | 下次让龙虾做一次 INDEX 补全 |
 
 ### 🔮 已评估但暂未实施的升级
 
 | 升级方向 | 触发条件 | 优先级 |
 |---------|---------|--------|
-| `@playwright/mcp` | fetch 抓不到 JS 渲染页面时 | 中（遇到再装） |
+| `@playwright/mcp` | fetch 抓不到 JS 渲染页面时（scrapling 已部分覆盖） | 中（遇到再装） |
 | Tavily MCP | 需要更高质量搜索时 | 低（有 API key 再装） |
 | n8n 工作流编排 | VM 内存≥8GB 或 VoxBridge 需对接第三方 API | 低 |
-| RAG 向量检索知识库 | 日志文件>200个 | 低 |
+| 心跳 cron 配置 | 下次检查时顺手做掉 | 中 |
 | 语音交互（STT/TTS） | VoxBridge pipeline 稳定后 | 未来 |
 
 ---
 
-_本文档由 WorkBuddy 维护，所有 IP / 密钥 / Token 均已脱敏。_
+_本文档由 WorkBuddy 维护，所有 IP / 密钥 / Token 均已脱敏。_  
 _最后更新：2026-03-15_
