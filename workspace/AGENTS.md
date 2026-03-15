@@ -48,8 +48,8 @@ Run these in **parallel** before doing anything else:
 4. **[PARALLEL]** Read `SELF_KNOWLEDGE.md` (skills list: knowledge-notebook, knowledge-ingest, academic-search) — understand your own setup
 5. **[PRIORITY]** Read `KNOWLEDGE_BASE.md` — current system state snapshot (faster than reading all logs)
 6. Read `memory/YYYY-MM-DD.md` (today + yesterday) for recent context
-7. Check round counter: `cat ~/.openclaw/memory/round_counter.txt` — if ≥ 10, re-read AI_RULES.md and reset to 0
-8. Check rule freshness: `cat ~/.openclaw/memory/rule_sync_time.txt` — note when rules were last synced from GitHub
+7. Check round counter: `cat ~/.openclaw/workspace/memory/round_counter.txt` — if ≥ 10, re-read AI_RULES.md and reset to 0
+8. Check rule freshness: `cat ~/.openclaw/workspace/memory/rule_sync_time.txt` — note when rules were last synced from GitHub
 9. **[PARALLEL]** Read `TOOLS.md` — know your MCP tools and decision tree before starting any task
 10. Check heartbeat cron health: `python3 -c "import json; j=json.load(open('/home/xzy0626/.openclaw/cron/jobs.json')); errs=[x['name'] for x in j['jobs'] if x['state'].get('consecutiveErrors',0)>0]; print('\u26a0\ufe0f cron errors: '+str(errs)) if errs else None"` — if any errors, notify owner
 
