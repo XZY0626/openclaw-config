@@ -204,3 +204,37 @@ Your configuration history → `memory/` and GitHub `ai-session-logs`
 read_file:  workspace/KNOWLEDGE_BASE.md
 write_file: workspace/KNOWLEDGE_BASE.md
 ```
+
+---
+
+## 🔄 DUAL-SYNC 双端同步规范
+
+WorkBuddy（Windows）和 OpenClaw（VM）共用同一个 GitHub 仓库 `openclaw-config`，必须保持一致。
+
+### 配置文件变更后必须同步
+
+当你修改了以下内容后，**立即**执行同步脚本：
+- `openclaw.json`（任何字段变更）
+- `workspace/AGENTS.md` 或其他 workspace 文件
+- `workspace/skills/` 下的技能文件
+- `scripts/` 下的脚本文件
+- `agents/` 下的 agent 配置（auth-profiles.json **除外**，永远不能入库）
+
+### 同步命令
+
+```bash
+bash ~/.openclaw/scripts/sync_config_to_github.sh "描述本次变更"
+```
+
+### 安全规范
+
+1. `auth-profiles.json` **永远不能推送到 GitHub**（脚本已自动排除）
+2. `openclaw.json` 中的 `apiKey`/`appSecret`/`token` 会自动脱敏为 `***`
+3. `VoxBridge-backup-*` 等大型目录会自动排除
+4. `venv/`、`node_modules/`、`*.db` 会自动排除
+
+### WorkBuddy 侧触发时机
+
+WorkBuddy 每次通过 SSH 修改 VM 上的配置后，会自动拉取最新版同步到本地仓库并推送 GitHub。
+OpenClaw 侧使用 `sync_config_to_github.sh` 脚本做同样的事。
+每天凌晨 2 点系统 cron 会自动执行一次兜底同步。
