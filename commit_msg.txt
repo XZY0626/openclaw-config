@@ -1,0 +1,1 @@
+docs: README 全面重写，脱敏展示完整架构（Tailscale/Memory/MCP/心跳/GitHub方案）

@@ -1,0 +1,86 @@
+# 技能：学术论文四源搜索
+
+**版本**: v2.0 | **更新**: 2026-03-15 | **状态**: ✅ 已部署，随时可用
+
+---
+
+## 我能做什么
+
+当你（龙虾）需要研究某个技术方向、查找最新算法、寻找某篇论文的引用关系，或者想知道某个领域的前沿进展时，**直接调用学术搜索工具**，不要用通用 web_search 凑合。
+
+这个工具同时查询四个专业学术数据库，去重合并后按引用数排序返回结果。
+
+---
+
+## 数据源覆盖
+
+| 数据源 | 论文量 | 强项 | 状态 |
+|--------|--------|------|------|
+| **arXiv** | CS/ML/物理预印本 | 最新论文（提交即可查） | ✅ 无需 key |
+| **OpenAlex** | 4.74亿篇 | 覆盖最全，跨学科，有摘要 | ✅ 无需 key |
+| **Crossref** | 1.4亿篇 | DOI元数据，引用计数，精确 | ✅ 无需 key |
+| **Semantic Scholar** | 2.14亿篇 | 语义搜索，引用树 | ⚠️ 需 key（暂未配置，可选加入） |
+
+**默认搜索三源**（arXiv + OpenAlex + Crossref），全部无限流风险，稳定可用。
+
+---
+
+## 调用方式
+
+**脚本路径**: `/home/xzy0626/.openclaw/scripts/academic_search.py`
+
+```bash
+# 标准搜索（三源，推荐）
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "<关键词>" --limit 8
+
+# 限定年份（只看近几年）
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "<关键词>" --year-from 2022
+
+# JSON 输出（适合程序解析或你自己处理结果）
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "<关键词>" --json
+
+# 精确 DOI 查找（查完整元数据 + 引用关系）
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py --doi "10.48550/arXiv.2212.04356"
+
+# 只查 arXiv（最快，CS/ML 预印本）
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "<关键词>" --sources arxiv --limit 5
+
+# 全四源（需要 S2 key 时使用）
+S2_API_KEY=<key> python3 /home/xzy0626/.openclaw/scripts/academic_search.py "<关键词>" --sources arxiv,openalex,crossref,s2
+```
+
+---
+
+## 何时主动使用这个技能
+
+以下场景**必须优先调用**学术搜索，而不是仅靠已有知识回答：
+
+1. **用户提到某个技术方向**，想知道最新进展 → 搜 arXiv + OpenAlex
+2. **VoxBridge 开发中**遇到算法瓶颈（ASR精度、翻译质量、TTS自然度） → 搜相关领域论文
+3. **用户提到一篇具体论文**，需要找全文 / 引用 / 相关工作 → 用 `--doi` 精确查
+4. **比较多个算法方案**，需要找 benchmark 数据 → 搜相关 survey 论文
+5. **用户说"查一下"、"找找论文"、"有没有相关研究"** → 直接调用，不要说"我的知识截止到"
+
+---
+
+## VoxBridge 专属搜索词
+
+| 研究方向 | 推荐关键词 |
+|----------|-----------|
+| ASR 加速 | `faster-whisper CTranslate2 quantization inference` |
+| 低延迟 ASR | `streaming speech recognition low latency real-time` |
+| 翻译质量 | `argostranslate neural machine translation quality improvement` |
+| 翻译后处理 | `machine translation post-editing domain adaptation` |
+| TTS 自然度 | `edge TTS neural text-to-speech prosody naturalness` |
+| TTS 语速控制 | `speech synthesis rate control duration prediction` |
+| 端到端降噪 | `whisper noise robust speech recognition enhancement` |
+| 全流程 pipeline | `speech translation cascaded end-to-end system` |
+
+---
+
+## 注意事项
+
+- Crossref 对某些细分关键词相关性不如 arXiv，**优先看 arXiv + OpenAlex 的结果**
+- arXiv 搜索速度最快（~1s），OpenAlex 次之（~2s），Crossref 最慢（~3-5s）
+- 搜索结果按**引用数从高到低**排序，引用数高不代表最新，注意年份
+- 如果搜索结果不理想，换**英文关键词**，用论文标题中常见的术语

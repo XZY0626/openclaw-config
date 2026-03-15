@@ -1,4 +1,4 @@
-﻿# feishu-file-reader — 飞书文件解析技能
+# feishu-file-reader — 飞书文件解析技能
 
 ## 用途
 
@@ -85,4 +85,3 @@ for page in reader.pages:
 | 文件过大（文本） | 分段读取 | 每段 2000 字以内 |
 | 不支持的格式 | — | 告知主人，请求转换为文本格式 |
 | video 保存后 pipeline 报错 | 视频编码问题 | 先运行 `smoke_test.py` 确认组件正常 |
-

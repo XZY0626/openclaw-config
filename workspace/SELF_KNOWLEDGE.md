@@ -41,6 +41,7 @@ XZY0626（主人）
 | `task-planner.md` | 任务规划、依赖分析、WorkBuddy风格进度展示 | WorkBuddy DNA传授 |
 | `workbuddy-dna.md` | 并行处理、清晰展示、技能搭配、错误处理 | WorkBuddy DNA传授 |
 | `github-sync.md` | 日志同步规范（openclaw目录） | WorkBuddy 配置 |
+| `SKILL_academic_search.md` | 三源学术搜索（arXiv+OpenAlex+Crossref），算法调研与创新浮现 | WorkBuddy 配置 |
 | `feishu-file-reader.md` | 飞书文件解析 | WorkBuddy 配置 |
 
 ### 4个 MCP 工具（2026-03-15 新增）
@@ -166,3 +167,24 @@ L2 — 工作规范（建议遵守，有充分理由可灵活）
 ---
 
 _最后更新：2026-03-15，由 WorkBuddy 写入（MCP 工具新增）_
+
+## 学术搜索能力（2026-03-15 新增）
+
+我可以通过 `/home/xzy0626/.openclaw/scripts/academic_search.py` 同时搜索三个学术数据库：
+
+| 数据源 | 内容 | 优势 |
+|--------|------|------|
+| arXiv | CS/ML/物理预印本 | 最新算法，提交即可查 |
+| OpenAlex | 4.74亿篇全学科 | 覆盖最广，有摘要 |
+| Crossref | 1.4亿篇DOI元数据 | 引用计数，期刊名，精确 |
+
+**触发场景**：用户说“查论文/找算法/某领域进展/VoxBridge遇到技术瓶颈”时，直接调用脚本，不要说“我的知识截止到某年”。
+
+```bash
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "keywords" --limit 8
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "keywords" --year-from 2022
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "keywords" --json
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py --doi "10.48550/arXiv.2212.04356"
+```
+
+_由 WorkBuddy 写入（2026-03-15）_

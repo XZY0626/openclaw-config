@@ -114,14 +114,14 @@
 
 | 日期 | 操作 | 结果 |
 |------|------|------|
-| 2026-03-15 | MCP 4工具部署（filesystem/fetch/websearch/desktop-commander） | ✅ 全部就绪，gateway已重启 |
-| 2026-03-15 | TOOLS.md v3 更新（含 MCP 使用规范） | ✅ 已推送 GitHub |
-| 2026-03-15 | openclaw-config 仓库补齐 workspace 规则文件 | ✅ 已归档 |
-| 2026-03-15 | VoxBridge .git 4.9GB→376KB 清理 | ✅ 成功，d0c7182 推送 |
-| 2026-03-15 | workspace 路径机制修复（workspaceOnly 前缀） | ✅ github-sync.md v3 更新 |
-| 2026-03-15 | github-sync.md 加入 pull-rebase 防冲突规则 | ✅ 已部署 |
+| 2026-03-15 | 存储 OpenClaw 系统配置和技术说明到记忆库 | ✅ memory/2026-03-15-OpenClaw系统配置和技术说明.md |
+| 2026-03-15 | VoxBridge Day 3 代码改进完成并推送 GitHub | ✅ d0c7182（utils/translate/tts/glossary/downloader） |
+| 2026-03-15 | yt-dlp 在 VoxBridge venv 中安装成功 | ✅ v2026.03.13 |
+| 2026-03-15 | KNOWLEDGE_BASE.md v1.0 创建并部署 | ✅ 启动流程第5步已更新 |
 | 2026-03-15 | VoxBridge- 目录重命名为 VoxBridge | ✅ 已完成 |
-| 2026-03-15 | AGENTS.md v4 + 安全审计 10/10 | ✅ 已验证 |
+| 2026-03-15 | VoxBridge .git 4.9GB→376KB 清理 | ✅ 成功，d0c7182 推送 |
+| 2026-03-15 | github-sync.md 加入 pull-rebase 防冲突规则 | ✅ 已部署 |
+| 2026-03-15 | TOOLS.md v3 更新（含 MCP 使用规范） | ✅ 已推送 GitHub |
 | 2026-03-15 | ai-session-logs 仓库初始化 + SSH key 配置 | ✅ 已完成 |
 | 2026-03-14 | 龙虾工具能力升级（21项 allow 列表） | ✅ 已配置 |
 
@@ -168,3 +168,57 @@ ls ~/.local/lib/node_modules/@wonderwhy-er/desktop-commander/dist/index.js
 - 详细执行过程（去日志文件里写）
 - 错误堆栈（去日志文件里写）
 - 对话原文
+
+---
+
+## 📌 Section 5: 学术论文 API 配置
+
+### 四源学术搜索工具
+| 字段 | 内容 |
+|------|------|
+| 脚本路径 | `/home/xzy0626/.openclaw/scripts/academic_search.py` |
+| 调用方式 | `python3 /home/xzy0626/.openclaw/scripts/academic_search.py <关键词> [参数]  # 默认三源: arxiv+openalex+crossref` |
+| 支持的数据源 | arXiv、OpenAlex、Semantic Scholar |
+
+### 数据源状态
+| 数据源 | 状态 | 限流 | 需要 key |
+|--------|------|------|----------|
+| **arXiv** | ✅ 正常（已验证） | 3 req/s，加 0.4s 延迟 | 不需要 |
+| **OpenAlex** | ✅ 正常（已验证） | 10000 req/天（polite pool） | 不需要，加 email 参数即可 |
+| **Crossref** | ✅ 正常（已验证） | 无限流，稳定 | 不需要 |
+| **Semantic Scholar** | ⚠️ 无 key 时 429 限流 | 无 key 常被限流 | 需要免费 key（可选），申请: https://www.semanticscholar.org/product/api |
+
+### 环境变量配置
+```bash
+# 在 ~/.bashrc 或 ~/.profile 中添加（可选，有 key 时配置）
+export S2_API_KEY="你的Semantic Scholar API key"
+export OPENALEX_EMAIL="你的邮箱"  # 进入 polite pool，当前默认: openclaw@research.local
+```
+
+### 常用命令
+```bash
+# 基础搜索（arXiv + OpenAlex，不受 S2 限流影响）
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "faster-whisper inference optimization" --sources arxiv,openalex --limit 5
+
+# 搜索最新论文（2022年后）
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "speech translation neural" --year-from 2022 --sources arxiv,openalex
+
+# JSON 输出（供程序解析）
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "TTS prosody control" --json --sources arxiv,openalex
+
+# 有 S2 key 时，三源全搜
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "argostranslate quality improvement" --s2-key $S2_API_KEY
+
+# 按 DOI 精确查找
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py --doi "10.48550/arXiv.2212.04356"
+```
+
+### VoxBridge 研究场景
+| 研究方向 | 推荐搜索关键词 |
+|----------|----------------|
+| ASR 优化 | `faster-whisper CTranslate2 acceleration` |
+| 翻译质量 | `argostranslate neural machine translation quality` |
+| TTS 自然度 | `edge TTS prosody naturalness control` |
+| 端到端 pipeline | `speech translation end-to-end inference pipeline` |
+| 降噪/鲁棒性 | `whisper noise robustness enhancement` |
+

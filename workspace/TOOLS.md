@@ -203,3 +203,42 @@ ssh -i E:\Application\WorkBuddy\id_vm -o StrictHostKeyChecking=no xzy0626@192.16
 |------|------|---------|
 | `@playwright/mcp` | 替代/补充 fetch，处理 JS 渲染的动态页面 | 遇到 fetch 抓不到内容的场景时升级 |
 | Tavily MCP | 替代 websearch-mcp，搜索质量更高 | 主人申请 Tavily 免费 API key 后 |
+
+---
+
+## 🔬 学术论文搜索工具
+
+### `academic_search.py` — 四源学术论文搜索（arXiv + OpenAlex + Crossref + S2）
+**位置**: `/home/xzy0626/.openclaw/scripts/academic_search.py`  
+**数据源**: arXiv（即时）+ OpenAlex（4.74亿篇）+ Crossref（1.4亿篇 DOI 元数据）+ Semantic Scholar（有key时可选）
+
+**推荐用法**（arXiv + OpenAlex + Crossref，全部无需 key，稳定可用）:
+```bash
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "<研究关键词>" \
+  --limit 8 \
+  --year-from 2022
+```
+
+**JSON 输出**（供 pipeline 程序解析）:
+```bash
+python3 /home/xzy0626/.openclaw/scripts/academic_search.py "<关键词>" --json --sources arxiv,openalex
+```
+
+**有 Semantic Scholar key 时（三源全开）**:
+```bash
+S2_API_KEY=<你的key> python3 /home/xzy0626/.openclaw/scripts/academic_search.py "<关键词>"
+```
+
+**参数说明**:
+- `--limit N` — 每源返回 N 篇（默认 8）
+- `--sources arxiv,openalex,s2` — 逗号分隔，选择数据源
+- `--year-from YYYY` — 只返回 YYYY 年之后的论文
+- `--doi <DOI>` — 精确按 DOI 查找
+- `--json` — 返回 JSON 格式（程序解析用）
+
+**注意**: 默认已包含 Crossref，无需任何 key 即可稳定三源搜索。S2 key 可选，有则自动启用。
+
+
+### 技能感知文件：`SKILL_academic_search.md`
+**位置**: `/home/xzy0626/.openclaw/workspace/skills/SKILL_academic_search.md`
+龙虾开新会话时会读取此文件，明确知道自己拥有四源学术搜索能力，知道何时主动调用、如何调用。

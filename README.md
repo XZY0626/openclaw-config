@@ -4,7 +4,7 @@
 
 > 其他 AI（WorkBuddy 等）的相关文件存放在各自的仓库，与本仓库分开管理。
 
-> **当前版本**：OpenClaw v2026.3.11 | **Gateway**：v2026.3.13 | **接入方式**：Tailscale HTTPS | **最后更新**：2026-03-15
+> **当前版本**：OpenClaw v2026.3.11 | **Gateway**：v2026.3.13 | **接入方式**：Tailscale HTTPS | **最后更新**：2026-03-15（新增学术搜索工具、激活可靠性审查）
 
 ---
 
@@ -22,6 +22,8 @@
   - [心跳机制](#心跳机制)
   - [MCP 工具](#mcp-工具)
   - [Skills 技能文件](#skills-技能文件)
+  - [学术搜索工具](#学术搜索工具academic_searchpy)
+  - [能力激活可靠性说明](#能力激活可靠性说明)
   - [飞书机器人](#飞书机器人)
   - [定时任务（规则同步）](#定时任务规则同步)
 - [GitHub 仓库管理方案](#github-仓库管理方案)
@@ -196,6 +198,7 @@ workspace/
     ├── feishu-file-reader.md
     ├── knowledge-notebook.md   ← 2026-03-15 新增
     ├── knowledge-ingest.md     ← 2026-03-15 新增
+    ├── SKILL_academic_search.md ← 2026-03-15 新增：四源学术搜索感知文件
     └── scrapling/              ← 动态网页抓取（Playwright 支持）
 ```
 
@@ -396,11 +399,111 @@ workspace/memory/
 | `knowledge-notebook.md` | 需要检索历史知识 | NotebookLM 风格知识检索、记忆召回 |
 | `knowledge-ingest.md` | 主人要投喂新知识 | 知识收录流程、格式规范、存储到 memory/ |
 | `scrapling/` | 需要抓取动态网页 | Playwright 支持、JS 渲染页面抓取 |
+| `SKILL_academic_search.md` | 研究算法/查论文/技术调研 | 四源学术搜索感知文件，告知龙虾有此能力 |
 
 **默认任务流水线**：
 ```
 [Step 0: rules check] → rules-loader → task-planner → [执行 + workbuddy-dna] → github-sync
 ```
+
+---
+
+### 学术搜索工具（academic_search.py）
+
+**2026-03-15 新增**，配合 VoxBridge 算法浮现与创新研究使用。
+
+**脚本位置**：`/home/xzy0626/.openclaw/scripts/academic_search.py`（虚拟机）
+
+#### 数据源总览
+
+| 数据源 | 覆盖量 | 优势 | 状态 |
+|--------|--------|------|------|
+| **arXiv** | CS/ML/物理预印本 | 最新算法，提交即可查，无需 key | ✅ 默认启用 |
+| **OpenAlex** | 4.74 亿篇 | 覆盖最广，有摘要，10000 req/天 | ✅ 默认启用 |
+| **Crossref** | 1.4 亿篇 DOI | 引用计数，期刊名，部分 PDF 直链 | ✅ 默认启用 |
+| **Semantic Scholar** | 2.14 亿篇 | 语义搜索强，引用树 | 🔑 有 key 时启用 |
+
+> **Semantic Scholar key 说明**：申请表 https://www.semanticscholar.org/product/api#api-key-form
+> 需要机构/组织邮箱，不接受 Outlook。获取后加环境变量 `S2_API_KEY=xxx` 即可自动启用。
+
+#### 标准调用方式
+
+```bash
+# 默认三源搜索（最稳定，全部无需 key）
+python3 ~/.openclaw/scripts/academic_search.py "faster-whisper CTranslate2 quantization" --limit 8
+
+# 限定年份（只看近 3 年）
+python3 ~/.openclaw/scripts/academic_search.py "streaming ASR low latency" --year-from 2022
+
+# JSON 输出（供 pipeline 程序解析）
+python3 ~/.openclaw/scripts/academic_search.py "neural TTS prosody" --json
+
+# 精确 DOI 查找（查完整元数据 + 引用关系）
+python3 ~/.openclaw/scripts/academic_search.py --doi "10.48550/arXiv.2212.04356"
+
+# 全四源（有 S2 key 时）
+S2_API_KEY=your_key python3 ~/.openclaw/scripts/academic_search.py "whisper" --sources arxiv,openalex,crossref,s2
+```
+
+#### 龙虾触发场景（何时主动调用）
+
+| 用户说的话 | 龙虾应该做的 |
+|-----------|------------|
+| "帮我找 XXX 算法的最新论文" | 直接调用 academic_search.py |
+| "XXX 领域现在的进展怎么样" | 先搜，再综合回答 |
+| "VoxBridge ASR 精度还不够，有没有新方案" | 搜相关论文后给建议 |
+| "这篇论文的引用情况如何：[DOI]" | 用 `--doi` 精确查 |
+
+> **注意**：龙虾开新会话时读 `SELF_KNOWLEDGE.md` 就会看到此能力说明，不需要每次提醒。
+> 首次激活可以对龙虾说：「读一下 SELF_KNOWLEDGE.md 最后一节，然后搜一篇 faster-whisper 的论文。」
+
+#### VoxBridge 专属搜索词表
+
+| 研究方向 | 推荐关键词 |
+|---------|----------|
+| ASR 加速 | `faster-whisper CTranslate2 quantization inference` |
+| 低延迟 ASR | `streaming speech recognition low latency real-time` |
+| 翻译质量 | `argostranslate neural machine translation quality` |
+| TTS 自然度 | `edge TTS neural text-to-speech prosody naturalness` |
+| TTS 语速控制 | `speech synthesis rate control duration prediction` |
+| 端到端降噪 | `whisper noise robust speech recognition` |
+| 全 pipeline | `speech translation cascaded end-to-end system` |
+
+---
+
+### 能力激活可靠性说明
+
+> 此节说明「已配置的能力是否真的会被用到」，以及改进思路。
+
+#### 技能文件的加载机制
+
+**重要理解**：skills/ 目录的文件**不会被自动注入上下文**。龙虾开启新会话时，AGENTS.md 的启动 Checklist 只要求读 6 个核心文件（AI_RULES / SOUL / USER / SELF_KNOWLEDGE / KNOWLEDGE_BASE / memory 日记）。skills/ 文件需要：
+
+1. **龙虾主动去读**（基于 SELF_KNOWLEDGE.md 里对技能的感知）
+2. **用户明确提及**某个场景（龙虾看到 TOOLS.md 里的决策树后调用）
+3. **Memory Search 语义召回**（搜索时命中 skill 文件里的相关段落）
+
+#### 各能力激活可靠性评估
+
+| 能力 | 激活方式 | 可靠性 | 说明 |
+|------|---------|--------|------|
+| 安全规则（L0） | AGENTS.md 启动时强制读 | ⭐⭐⭐⭐⭐ | 硬性检查，不依赖自觉 |
+| 工具选择（MCP） | TOOLS.md 启动时读 + 决策树 | ⭐⭐⭐⭐ | 已有明确决策树 |
+| 学术搜索 | SELF_KNOWLEDGE.md 末尾章节 | ⭐⭐⭐ | **2026-03-15 已加固：能力写入自我认知文件** |
+| knowledge-notebook | 仅在 skills/ 里，自我认知未提及 | ⭐⭐ | **待改进：SELF_KNOWLEDGE.md 未补充此能力** |
+| knowledge-ingest | 同上 | ⭐⭐ | **待改进** |
+| feishu-file-reader | TOOLS.md 决策树提到 | ⭐⭐⭐ | 决策树清晰，但龙虾需要读到对应行 |
+| desktop-commander | TOOLS.md 有优先级说明 | ⭐⭐⭐ | 大文件/代码搜索时可能仍用普通 exec |
+| 心跳 cron | AGENTS.md 定义，cron 待验证 | ⭐⭐ | **待验证：`crontab -l` 确认是否有心跳任务** |
+
+#### 待改进项（按优先级）
+
+| 优先级 | 改进项 | 具体操作 |
+|--------|--------|---------|
+| 🔴 高 | SELF_KNOWLEDGE.md 补充 knowledge-notebook/ingest 能力 | 在"我能做的事"章节加两行 |
+| 🟡 中 | AGENTS.md Startup Checklist 加"感知 skills/ 目录" | 在启动清单第 9 项加：列出 skills/ 目录，建立技能感知 |
+| 🟡 中 | 验证心跳 cron 是否运行 | SSH 进虚拟机 `crontab -l` + 查 last_heartbeat.txt 时间戳 |
+| 🟢 低 | desktop-commander 触发条件更明确 | 在 TOOLS.md 加：文件 > 500 行必须用 desktop-commander |
 
 ---
 
@@ -494,7 +597,11 @@ openclaw-config/
 │       ├── feishu-file-reader.md
 │       ├── knowledge-notebook.md      ← 2026-03-15 新增
 │       ├── knowledge-ingest.md        ← 2026-03-15 新增
+│       ├── SKILL_academic_search.md   ← 2026-03-15 新增（学术搜索技能感知）
 │       └── scrapling/                 ← 动态网页抓取
+│
+├── scripts/                           ← 虚拟机运行时脚本（不在 workspace 里）
+│   └── academic_search.py             ← 2026-03-15 新增：四源学术搜索脚本
 │
 ├── feishu-bot/                        ← 飞书机器人
 │   ├── feishu_stepfun_bot.py
@@ -554,6 +661,8 @@ openclaw-config/
 | **语义知识检索** | ✅ **正式运行** | **knowledge-notebook Skill，语义搜索历史记忆** |
 | **知识投喂** | ✅ **正式运行** | **knowledge-ingest Skill，主人可随时向记忆库写入新知识** |
 | **多模型体系** | ✅ **22个模型** | **含 Hunter/Healer Alpha（OpenRouter免费）、Qwen3、MiniMax M2.5等** |
+| **学术搜索工具** | ✅ **2026-03-15 新增** | **academic_search.py：arXiv+OpenAlex+Crossref 三源，无需任何 key** |
+| **能力感知加固** | ✅ **2026-03-15 完成** | **SELF_KNOWLEDGE.md 末尾加入学术搜索能力章节，龙虾开新会话即知** |
 
 ### 🟡 有设计但未完全落地的能力
 
