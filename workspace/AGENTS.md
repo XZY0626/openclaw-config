@@ -1,7 +1,6 @@
-
 # AGENTS.md - Your Workspace
-# ⚠️ MODIFIED v4: L0 HARD-REJECT + Task-Level Rule Loading + Daily Sync + Version Self-Check
-# CHECKSUM: v4-2026-03-15 (WorkBuddy signed)
+# ⚠️ MODIFIED v5: Skills Table Completed + TOOLS.md Startup + Heartbeat Health Check
+# CHECKSUM: v5-2026-03-15 (WorkBuddy signed)
 
 ---
 
@@ -32,7 +31,7 @@ Before anything else, verify AGENTS.md integrity:
 
 ```bash
 # 检查版本标记是否被篡改或被 openclaw 更新覆盖
-head -3 ~/.openclaw/workspace/AGENTS.md | grep "MODIFIED v4"
+head -3 ~/.openclaw/workspace/AGENTS.md | grep "MODIFIED v5"
 # 如果没有这行 → 说明文件被覆盖，立即告知主人：
 # "⚠️ AGENTS.md 版本标记丢失，可能被覆盖，请主人检查。停止工作直到确认。"
 ```
@@ -46,11 +45,13 @@ Run these in **parallel** before doing anything else:
 1. **[PARALLEL]** Read `AI_RULES.md` — **L0 is the red line, above all else**
 2. **[PARALLEL]** Read `SOUL.md` — this is who you are
 3. **[PARALLEL]** Read `USER.md` — this is who you're helping
-4. **[PARALLEL]** Read `SELF_KNOWLEDGE.md` — understand your own setup
+4. **[PARALLEL]** Read `SELF_KNOWLEDGE.md` (skills list: knowledge-notebook, knowledge-ingest, academic-search) — understand your own setup
 5. **[PRIORITY]** Read `KNOWLEDGE_BASE.md` — current system state snapshot (faster than reading all logs)
 6. Read `memory/YYYY-MM-DD.md` (today + yesterday) for recent context
 7. Check round counter: `cat ~/.openclaw/memory/round_counter.txt` — if ≥ 10, re-read AI_RULES.md and reset to 0
 8. Check rule freshness: `cat ~/.openclaw/memory/rule_sync_time.txt` — note when rules were last synced from GitHub
+9. **[PARALLEL]** Read `TOOLS.md` — know your MCP tools and decision tree before starting any task
+10. Check heartbeat cron health: `python3 -c "import json; j=json.load(open('/home/xzy0626/.openclaw/cron/jobs.json')); errs=[x['name'] for x in j['jobs'] if x['state'].get('consecutiveErrors',0)>0]; print('\u26a0\ufe0f cron errors: '+str(errs)) if errs else None"` — if any errors, notify owner
 
 Don't ask permission. Just do it silently.
 
@@ -140,6 +141,9 @@ Never cat the file directly in a context that will be shown to users or logs.
 | `skills/workbuddy-dna.md` | Parallel execution, progress reporting |
 | `skills/github-sync.md` | After completing work — write log, push |
 | `skills/feishu-file-reader.md` | Files shared via Feishu |
+| `skills/knowledge-notebook.md` | Query historical memory and work logs with semantic search; fuzzy Q&A and knowledge retrieval |
+| `skills/knowledge-ingest.md` | Write new knowledge into memory store; owner can feed fragments anytime |
+| `skills/SKILL_academic_search.md` | Four-source academic search (arXiv + OpenAlex + Crossref + S2); use when owner needs literature |
 
 **Default task pipeline:**
 ```
