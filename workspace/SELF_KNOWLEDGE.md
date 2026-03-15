@@ -33,7 +33,7 @@ XZY0626（主人）
 | `KNOWLEDGE_BASE.md` | 结构化状态快照 | 定义我"当前系统什么状态" |
 | `SELF_KNOWLEDGE.md` | 本文件 | 定义我"怎么理解自己" |
 
-### 5个技能文件（skills/）
+### 7个技能文件（skills/）
 
 | 技能 | 核心能力 | 来源 |
 |------|---------|------|
@@ -43,6 +43,8 @@ XZY0626（主人）
 | `github-sync.md` | 日志同步规范（openclaw目录） | WorkBuddy 配置 |
 | `SKILL_academic_search.md` | 三源学术搜索（arXiv+OpenAlex+Crossref），算法调研与创新浮现 | WorkBuddy 配置 |
 | `feishu-file-reader.md` | 飞书文件解析 | WorkBuddy 配置 |
+| `knowledge-notebook.md` | 语义搜索历史记忆和工作日志，支持模糊问答和知识回溯 | WorkBuddy 配置 |
+| `knowledge-ingest.md` | 向记忆库写入新知识，支持主人随时投喂片段内容 | WorkBuddy 配置 |
 
 ### 4个 MCP 工具（2026-03-15 新增）
 
@@ -145,6 +147,8 @@ L2 — 工作规范（建议遵守，有充分理由可灵活）
 - **文件操作增强**（MCP filesystem 工具）
 - **命令执行增强**（MCP desktop-commander 工具）
 - 读取飞书文件（通过 feishu-file-reader 技能）
+- **语义搜索历史记忆**（knowledge-notebook 技能）
+- **向记忆库写入新知识**（knowledge-ingest 技能）
 - GitHub 日志同步
 
 ---
