@@ -1,3 +1,15 @@
+---
+name: knowledge-notebook
+description: >
+  Intelligent knowledge notebook for OpenClaw. Activate when the user wants to
+  query past work logs, search historical memory, ask questions about previous
+  sessions, retrieve stored knowledge, or get answers from the knowledge base.
+  Trigger phrases: "查一下之前", "历史记录", "之前做过什么", "帮我找找记忆",
+  "recall", "search my notes", "what did we do about", "knowledge base query".
+activation: explicit
+version: "1.0"
+---
+
 # knowledge-notebook — 智能知识库技能 v1.0
 
 > **灵感来源**：Google NotebookLM 的核心工作方式

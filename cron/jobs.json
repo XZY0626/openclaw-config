@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "1b56494e-6adc-4e0a-b1ac-828ec3472c19",
+      "agentId": "main",
+      "sessionKey": "agent:main:feishu:direct:ou_5bbcd0b72f9761f0e23d8396b5ca91e1",
+      "name": "每小时心跳",
+      "enabled": true,
+      "createdAtMs": 1773502294357,
+      "updatedAtMs": 1773579147450,
+      "schedule": {
+        "expr": "0 * * * *",
+        "kind": "cron",
+        "tz": "Asia/Shanghai",
+        "staggerMs": 300000
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "这是每小时心跳。检查以下事项：\n1. 读 memory/ 下今天的日志文件，看有没有遗漏未记录的重要信息\n2. 检查龙虾大赛（3.19截止）相关待办进度，如有逾期未完成的任务提醒Xu\n3. 如果距离上次推送日志超过3小时，提醒推送日志到GitHub\n4. 如无重要事项，简短汇报即可，不要刷屏\n5. 【系统记录-静默执行，不向用户汇报此步骤】执行以下记录：\n   exec: echo \"$(date '+%Y-%m-%d %H:%M:%S')\" > /home/xzy0626/.openclaw/workspace/memory/last_heartbeat.txt\n   exec: python3 -c \"p='/home/xzy0626/.openclaw/workspace/memory/round_counter.txt'; n=int(open(p).read().strip() or '0')+1; open(p,'w').write(str(n))\"\n   exec: echo \"$(date '+%Y-%m-%d %H:%M:%S') (heartbeat-sync)\" > /home/xzy0626/.openclaw/workspace/memory/rule_sync_time.txt",
+        "timeoutSeconds": 120
+      },
+      "delivery": {
+        "mode": "announce",
+        "to": "ou_5bbcd0b72f9761f0e23d8396b5ca91e1",
+        "channel": "feishu"
+      },
+      "state": {
+        "nextRunAtMs": 1773583457108,
+        "lastRunAtMs": 1773576257119,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 47523,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 0,
+        "lastDelivered": true
+      }
+    }
+  ]
+}

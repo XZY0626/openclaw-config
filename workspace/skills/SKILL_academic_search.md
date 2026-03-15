@@ -1,3 +1,15 @@
+---
+name: academic-search
+description: >
+  Four-source academic paper search for OpenClaw (arXiv + OpenAlex + Crossref + Semantic Scholar).
+  Activate when the user wants to find research papers, literature review, citation analysis,
+  or explore the state of the art in any technical field. No API key required for arXiv/OpenAlex/Crossref.
+  Trigger phrases: "搜索论文", "找文献", "学术搜索", "arxiv", "研究现状", "前沿进展",
+  "find papers", "literature search", "academic search", "research on".
+activation: explicit
+version: "2.0"
+---
+
 # 技能：学术论文四源搜索
 
 **版本**: v2.0 | **更新**: 2026-03-15 | **状态**: ✅ 已部署，随时可用
