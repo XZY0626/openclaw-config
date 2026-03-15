@@ -1,0 +1,170 @@
+# KNOWLEDGE_BASE.md — 龙虾结构化知识库
+# 版本：v1.1 | 创建：2026-03-15 | 更新：2026-03-15 | 维护者：龙虾（每次操作后更新）
+# ⚠️ 这不是日志，是可检索的状态快照。只记"现在是什么状态"，不记"发生了什么过程"。
+
+---
+
+## 🗂️ 如何使用这个文件
+
+- **读**：开话前读这里，快速定位当前状态，不用翻几百行日志
+- **写**：每次操作完成后，更新对应 Section 的状态，不要追加流水账
+- **搜索**：用关键词搜索（项目名/组件名/问题类型）
+- **详情**：找到状态后，去 `workspace/logs/openclaw/YYYY-MM/` 读对应的详细日志
+
+---
+
+## 📌 Section 1: 系统架构快照
+
+### 宿主机（Windows）
+| 组件 | 状态 | 备注 |
+|------|------|------|
+| WorkBuddy | ✅ 运行中 | 主要操作界面 |
+| SSH 密钥 | ✅ 已配置 | `E:\Application\WorkBuddy\id_vm` (ed25519) |
+| ai-session-logs 仓库 | ✅ 已配置 | `E:\Application\WorkBuddy\agent\ai-session-logs` |
+| ai-rules 仓库 | ✅ 已配置 | `E:\Application\WorkBuddy\ai-rules` |
+| openclaw-config 仓库 | ✅ 已配置 | `E:\Application\WorkBuddy\agent\openclaw-config` |
+| LobsterRuleSync 任务计划 | ✅ 已配置 | 每天 03:00 从 GitHub 同步规则 |
+
+### 虚拟机（Ubuntu，内网 192.168.x.x）
+| 组件 | 状态 | 备注 |
+|------|------|------|
+| openclaw-gateway | ✅ 运行中 | systemd 用户级服务，loginctl linger=yes |
+| tailscale-serve | ✅ 运行中 | system 级服务，HTTPS 访问已配置 |
+| workspace 路径 | `~/.openclaw/workspace/` | workspaceOnly 限制在此路径内 |
+| ai-session-logs 本地仓库 | `~/ai-session-logs/` | 软链接到 workspace/logs 和 workspace/INDEX.md |
+| GitHub SSH 密钥 | `~/.ssh/id_github` | 已配置，可推送 ai-session-logs + VoxBridge |
+| Node.js | v22.22.0 | ✅ 已安装 |
+| Python | 3.12.3 | ✅ 已安装 |
+
+### MCP 工具（2026-03-15 新增）
+| MCP Server | 版本 | 状态 | 入口文件 |
+|---|---|---|---|
+| filesystem | 2026.1.14 | ✅ 就绪 | `/home/xzy0626/.local/lib/node_modules/@modelcontextprotocol/server-filesystem/dist/index.js` |
+| fetch (mcp-server-fetch) | 2025.4.7 | ✅ 就绪 | `/home/xzy0626/.local/bin/mcp-server-fetch` |
+| websearch | 1.0.3 | ✅ 就绪 | `/home/xzy0626/.local/lib/node_modules/websearch-mcp/dist/index.js` |
+| desktop-commander | 0.2.38 | ✅ 就绪 | `/home/xzy0626/.local/lib/node_modules/@wonderwhy-er/desktop-commander/dist/index.js` |
+
+配置备份：`~/.openclaw/openclaw.json.bak.mcp-20260315_112420`
+
+### Tailscale 访问
+| 地址 | 用途 |
+|------|------|
+| `https://xzy0626-vmware-virtual-platform.tail6f9a39.ts.net` | OpenClaw HTTPS 入口（外部访问） |
+
+---
+
+## 📌 Section 2: 项目状态
+
+### VoxBridge（英文视频→中文语音翻译）
+| 字段 | 内容 |
+|------|------|
+| 状态 | 🟡 Day 3 开发中 |
+| 本地目录 | `workspace/VoxBridge/`（注意：无横杠） |
+| GitHub 仓库 | `git@github.com:XZY0626/VoxBridge.git` |
+| 最新 commit | `d0c7182`（Day 1-3 clean init） |
+| 技术栈 | faster-whisper + argostranslate + Edge-TTS + ffmpeg |
+| 关键文件 | `src/pipeline.py` `src/transcribe.py` `src/translate.py` `src/tts.py` |
+| 备份 | `workspace/VoxBridge-backup-20260315_100321/` |
+| 历史问题 | venv/CUDA 误 commit 导致 .git 膨胀至 4.9GB，已清除 |
+| 下一步 | Day 4：完整 pipeline 集成测试 |
+
+---
+
+## 📌 Section 3: 规则与合规状态
+
+| 规则文件 | 版本 | 最后同步 | 状态 |
+|---------|------|---------|------|
+| AI_RULES.md | v2.4.0-lobster | 2026-03-15 | ✅ 有效 |
+| AGENTS.md | v4 | 2026-03-15 | ✅ 有效（L0 硬性拒绝已注入） |
+| SOUL.md | — | 2026-03-14 | ✅ 有效 |
+| TOOLS.md | v3 | 2026-03-15 | ✅ 已更新（含 MCP 工具使用规范） |
+| github-sync.md | v3 | 2026-03-15 | ✅ 已更新（含 pull-rebase 规范） |
+
+**合规审计状态**（最后审计：2026-03-15）
+- 脱敏：✅ L0.3 规范已注入
+- 版本自检：✅ AGENTS.md checksum 机制
+- Prompt Injection 防护：✅ L0 + L3.2
+- L0 保护：✅ AGENTS.md 顶部硬性拒绝
+- memory 路径：✅ 统一在 workspace/memory/
+
+---
+
+## 📌 Section 4: 已知问题与待办
+
+| 优先级 | 问题 | 状态 | 备注 |
+|--------|------|------|------|
+| P1 | VoxBridge Day 4 pipeline 集成 | 🟡 待开始 | 下一个开发任务 |
+| P2 | openclaw cron 心跳 memory 路径验证 | 🟡 待观察 | 等下次心跳（≤2h）运行后确认 |
+| P2 | MCP fetch 动态页面支持 | 🔍 未来升级 | 遇到 JS 渲染页面时升级到 @playwright/mcp |
+| P3 | websearch 质量升级 | 🔍 未来升级 | 申请 Tavily API key 后替换 websearch-mcp |
+
+### 📋 未来技术方案储备（现阶段不实施）
+
+| 方案 | 触发条件 | 状态 |
+|------|---------|------|
+| n8n 工作流编排 | VM 内存≥8GB 或 VoxBridge 需对接第三方 API | 🔍 已评估·暂不实施 |
+| RAG 向量检索知识库 | VM 内存≥8GB 或日志文件>200个 | 🔍 已评估·暂不实施 |
+| 个人 CRM（联系人追踪）| VoxBridge 进入商业化阶段 | 📋 待评估 |
+| 多 Agent 协作框架 | 项目复杂度大幅提升 | 📋 待评估 |
+| 语音交互入口（STT/TTS）| VoxBridge pipeline 稳定可用 | 📋 待评估 |
+
+---
+
+## 📌 Section 5: 关键操作历史（最近10条，保持精简）
+
+| 日期 | 操作 | 结果 |
+|------|------|------|
+| 2026-03-15 | MCP 4工具部署（filesystem/fetch/websearch/desktop-commander） | ✅ 全部就绪，gateway已重启 |
+| 2026-03-15 | TOOLS.md v3 更新（含 MCP 使用规范） | ✅ 已推送 GitHub |
+| 2026-03-15 | openclaw-config 仓库补齐 workspace 规则文件 | ✅ 已归档 |
+| 2026-03-15 | VoxBridge .git 4.9GB→376KB 清理 | ✅ 成功，d0c7182 推送 |
+| 2026-03-15 | workspace 路径机制修复（workspaceOnly 前缀） | ✅ github-sync.md v3 更新 |
+| 2026-03-15 | github-sync.md 加入 pull-rebase 防冲突规则 | ✅ 已部署 |
+| 2026-03-15 | VoxBridge- 目录重命名为 VoxBridge | ✅ 已完成 |
+| 2026-03-15 | AGENTS.md v4 + 安全审计 10/10 | ✅ 已验证 |
+| 2026-03-15 | ai-session-logs 仓库初始化 + SSH key 配置 | ✅ 已完成 |
+| 2026-03-14 | 龙虾工具能力升级（21项 allow 列表） | ✅ 已配置 |
+
+---
+
+## 📌 Section 6: 常用命令速查
+
+```bash
+# 推日志到 GitHub
+cd ~/ai-session-logs && git pull --rebase origin main && git add logs/openclaw/ INDEX.md && git commit -m "[日期] 描述" && git push
+
+# 检查 openclaw-gateway 状态
+systemctl --user status openclaw-gateway
+
+# 检查 tailscale
+sudo systemctl status tailscale-serve
+
+# VoxBridge 开发工作目录
+cd ~/.openclaw/workspace/VoxBridge
+
+# 写 memory（今日状态）
+# write_file → workspace/memory/YYYY-MM-DD.md
+
+# 检查 MCP 工具是否正常
+ls ~/.local/lib/node_modules/@modelcontextprotocol/server-filesystem/dist/index.js
+ls ~/.local/bin/mcp-server-fetch
+ls ~/.local/lib/node_modules/websearch-mcp/dist/index.js
+ls ~/.local/lib/node_modules/@wonderwhy-er/desktop-commander/dist/index.js
+```
+
+---
+
+## 📌 Section 7: Memory 写入规范
+
+**每次对话结束时更新：**
+
+1. 更新 Section 2（项目状态）中相关项目的状态和最新 commit
+2. 更新 Section 4（已知问题）的状态
+3. 在 Section 5 顶部插入新记录，超过 10 条时删掉最旧的一条
+4. 写详细日志到 `workspace/logs/openclaw/YYYY-MM/YYYYMMDD-主题.md`
+5. git push（含 pull --rebase）
+
+**这个文件不写的内容：**
+- 详细执行过程（去日志文件里写）
+- 错误堆栈（去日志文件里写）
+- 对话原文
