@@ -1,0 +1,6 @@
+{
+  "openai": {
+    "apiKey": "sk-d647569dfdf14ab6b9054bce328ab352",
+    "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  }
+}

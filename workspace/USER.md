@@ -6,7 +6,7 @@
 - **时区**：Asia/Shanghai（UTC+8）
 - **主要沟通渠道**：飞书
 - **宿主机**：Windows（C:\Users\须\）
-- **虚拟机**：Ubuntu，192.168.x.x，用户 xzy0626
+- **虚拟机**：Ubuntu，192.168.1.100，用户 xzy0626
 
 ## 工作风格
 
@@ -22,7 +22,7 @@
 | AI 规则仓库 | github.com/XZY0626/ai-rules |
 | 日志仓库 | github.com/XZY0626/ai-session-logs |
 | 配置仓库 | github.com/XZY0626/openclaw-config |
-| 虚拟机 SSH | ssh -i E:\Application\WorkBuddy\id_vm xzy0626@192.168.x.x |
+| 虚拟机 SSH | ssh -i E:\Application\WorkBuddy\id_vm xzy0626@192.168.1.100 |
 | Tailscale HTTPS | https://xzy0626-vmware-virtual-platform.tail6f9a39.ts.net |
 
 ## 模型偏好

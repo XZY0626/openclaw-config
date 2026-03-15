@@ -617,7 +617,7 @@
       "enabled": true,
       "accounts": {
         "default": {
-          "appId": "***",
+          "appId": "cli_a9247ccfec341cb5",
           "appSecret": "***"
         }
       },
@@ -644,7 +644,7 @@
         "http://localhost:18789",
         "https://xzy0626-vmware-virtual-platform.tail6f9a39.ts.net"
       ],
-      "allowInsecureAuth": true
+      "allowInsecureAuth": false
     },
     "auth": {
       "mode": "token",
@@ -690,6 +690,16 @@
         "shasum": "24a51736011947c57c81d5e07329c3bb3b6a6a61",
         "resolvedAt": "2026-03-13T07:47:31.935Z",
         "installedAt": "2026-03-13T07:47:44.136Z"
+      }
+    }
+  },
+  "mcp": {
+    "servers": {
+      "desktop-commander": {
+        "command": "node",
+        "args": [
+          "/home/xzy0626/.local/lib/node_modules/@wonderwhy-er/desktop-commander/dist/server.js"
+        ]
       }
     }
   }
