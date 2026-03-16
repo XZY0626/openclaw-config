@@ -4,13 +4,14 @@
 
 > 其他 AI（WorkBuddy 等）的相关文件存放在各自的仓库，与本仓库分开管理。
 
-> **当前版本**：OpenClaw v2026.3.11 | **Gateway**：v2026.3.13 | **接入方式**：Tailscale HTTPS | **最后更新**：2026-03-16（安全加固 v2.5.1：删除 .pre-disable-auth 认证旁路、AGENTS.md 补全技能注册表、README 新增 Skills/Capabilities/Extensions 完整说明）
+> **当前版本**：OpenClaw v2026.3.11 | **Gateway**：v2026.3.13 | **接入方式**：Tailscale HTTPS | **最后更新**：2026-03-16（安全加固 v3.0：Guardian Core 全场景安全防护体系 + AGENTS.md sha256 校验 + requirements hash 锁 + SKILL_LIFECYCLE.md）
 
 ---
 
 ## 📑 目录
 
 - [整体架构](#整体架构)
+- [安全防护体系（Guardian Core）](#安全防护体系guardian-core)
 - [各组件详解](#各组件详解)
   - [运行环境](#运行环境虚拟机)
   - [Tailscale 反向代理](#tailscale-反向代理怎么访问龙虾)
@@ -95,6 +96,47 @@
                                   .tail6f9a39.ts.net
                               （外网访问入口，脱敏展示）
 ```
+
+---
+
+## 安全防护体系（Guardian Core）
+
+> 参考 360安全卫士 / CrowdStrike Falcon 分层防护设计，于 2026-03-16 部署。  
+> 核心文件：`workspace/skills/guardian-core.md`（SIGNED v1，WorkBuddy signed）
+
+```
+┌─────────────────────────────────────────────────────┐
+│              Guardian Core v1.0                     │
+│          OpenClaw 全场景安全防护体系                  │
+├─────────────────────────────────────────────────────┤
+│ G1 启动护盾 │ 文件完整性校验 + denylist 验证          │
+│ G2 输入过滤 │ Prompt Injection 检测 + 来源标记         │
+│ G3 行为监控 │ 危险命令拦截 + 文件写入监控              │
+│ G4 供应链防御│ Skill 白名单 + 自动安装封锁              │
+│ G5 数据保护 │ 敏感路径访问控制 + 输出脱敏              │
+│ G6 事件响应 │ P0/P1/P2 三级告警 + 事件记录             │
+│ G7 情报更新 │ 安全事件库 + 规则迭代流程               │
+│ G8 多用户墙 │ 双向隔离边界 + 外部用户沙箱              │
+└─────────────────────────────────────────────────────┘
+```
+
+### 配套机制（已落地）
+
+| 机制 | 路径 | 说明 |
+|------|------|------|
+| AGENTS.md 完整性校验 | `workspace/.agents_checksum` + `workspace/verify_agents.sh` | sha256 实际校验，修改后执行 `--update` 更新 |
+| Skill 安装全流程规范 | `workspace/skills/SKILL_LIFECYCLE.md` | 6步安全审查：预审批→扫描→隔离测试→准入→注册→审计 |
+| 供应链封锁 | `openclaw.json → skills.denylist` | 封锁 `clawhub/*`、`npm:*`、`npx:*`；`autoInstall: false` |
+| 安全事件库 | `workspace/security/events/` | 已收录：ClawHavoc 供应链攻击、CVE-2026-25253 RCE 漏洞 |
+| requirements hash 锁 | `VoxBridge/requirements.lock.txt` | pip-compile --generate-hashes，防止依赖包被篡改 |
+
+### 待完成项
+
+| 项目 | 状态 | 建议 |
+|------|------|------|
+| HF Token 90 天轮换提醒 | 🟡 无自动提醒 | 设置 cron 在 90 天后发飞书提醒 |
+| memory/ 日志 90 天滚动清理 | 🟡 无策略 | 写清理脚本，cron 每月执行 |
+| 模型文件 SHA256 校验 | 🟢 可选 | 首次下载后记录 hash，加载时校验 |
 
 ---
 
@@ -371,20 +413,14 @@ workspace/memory/
 
 **MCP（Model Context Protocol）**：OpenClaw 连接外部工具的标准协议，每个 MCP Server 是一个独立进程，通过 stdio 和 gateway 通信。
 
-| 工具 | 版本 | 能力 | 何时主动用 |
-|------|------|------|-----------|
-| `filesystem` | 2026.1.14 | 读写文件、列目录、搜索文件名 | 需要操作文件时（优先于 exec cat/ls） |
-| `fetch` | 2025.4.7 | 抓取网页→Markdown | 主人给 URL、查文档 |
-| `websearch` | 1.0.3 | 联网搜索（免 API key） | 不了解的东西先搜，别说「我不知道」 |
-| `desktop-commander` | 0.2.38 | 命令执行增强、ripgrep 代码搜索、进程管理 | 执行 shell 命令时（优先于普通 exec） |
+| 工具 | 版本 | 核心能力 |
+|------|------|---------|
+| `filesystem` | 2026.1.14 | 读写文件、列目录、搜索文件名 |
+| `fetch` | 2025.4.7 | 抓取网页→Markdown（静态） |
+| `websearch` | 1.0.3 | 联网搜索（免 API key） |
+| `desktop-commander` | 0.2.38 | 命令执行增强、ripgrep 代码搜索、进程管理 |
 
-**MCP 工具安装位置**：
-```
-~/.local/lib/node_modules/@modelcontextprotocol/server-filesystem/
-~/.local/bin/mcp-server-fetch
-~/.local/lib/node_modules/websearch-mcp/
-~/.local/lib/node_modules/@wonderwhy-er/desktop-commander/
-```
+> 完整说明（使用时机、安装位置、决策树）见 [Extensions / MCP 工具](#-extensions--mcp-工具共-4-个)
 
 **配置备份**：`~/.openclaw/openclaw.json.bak.mcp-20260315_112420`
 
@@ -511,6 +547,7 @@ S2_API_KEY=your_key python3 ~/.openclaw/scripts/academic_search.py "whisper" --s
 | 🟡 中 | AGENTS.md Startup Checklist 加"感知 skills/ 目录" | 在启动清单第 9 项加：列出 skills/ 目录，建立技能感知 |
 | 🟡 中 | 验证心跳 cron 是否运行 | SSH 进虚拟机 `crontab -l` + 查 last_heartbeat.txt 时间戳 |
 | 🟢 低 | desktop-commander 触发条件更明确 | 在 TOOLS.md 加：文件 > 500 行必须用 desktop-commander |
+| ✅ 完成 | AGENTS.md checksum 机制 | `verify_agents.sh` + `.agents_checksum`，2026-03-16 落地 |
 
 ---
 
@@ -589,23 +626,31 @@ openclaw-config/
 ├── README.md                          ← 本文件（架构说明）
 │
 ├── workspace/                         ← ⭐ 龙虾规则文件体系（虚拟机镜像）
-│   ├── AGENTS.md                      ← 启动规程（v4，L0 硬性拒绝）
-│   ├── AI_RULES.md                    ← 安全规则 v2.4.0-lobster
-│   ├── SOUL.md                        ← 性格与原则
+│   ├── AGENTS.md                      ← 启动规程（v5，L0 硬性拒绝 + 技能注册表）
+│   ├── AI_RULES.md                    ← 安全规则 v3（L0-L4，含供应链、隐私保护）
+│   ├── SOUL.md                        ← 性格与原则（v2，含 Prompt Injection 防护）
 │   ├── USER.md                        ← 主人档案（脱敏）
 │   ├── SELF_KNOWLEDGE.md              ← 龙虾自我认知（含 WorkBuddy 配置说明）
-│   ├── TOOLS.md                       ← 工具使用规范（v3，含 MCP）
+│   ├── TOOLS.md                       ← 工具使用规范（v3，含 MCP 工具决策树）
 │   ├── KNOWLEDGE_BASE.md              ← 结构化状态快照（v1.1）
-│   └── skills/                        ← 技能文件（8个）
-│       ├── rules-loader.md
-│       ├── task-planner.md
-│       ├── workbuddy-dna.md
-│       ├── github-sync.md
-│       ├── feishu-file-reader.md
-│       ├── knowledge-notebook.md      ← 2026-03-15 新增
-│       ├── knowledge-ingest.md        ← 2026-03-15 新增
-│       ├── SKILL_academic_search.md   ← 2026-03-15 新增（学术搜索技能感知）
-│       └── scrapling/                 ← 动态网页抓取
+│   ├── verify_agents.sh               ← AGENTS.md sha256 完整性校验脚本（2026-03-16）
+│   ├── .agents_checksum               ← AGENTS.md 基准 sha256 存储文件
+│   ├── skills/                        ← 技能文件（11个）
+│   │   ├── rules-loader.md
+│   │   ├── task-planner.md
+│   │   ├── workbuddy-dna.md
+│   │   ├── github-sync.md
+│   │   ├── feishu-file-reader.md
+│   │   ├── knowledge-notebook.md      ← 2026-03-15 新增
+│   │   ├── knowledge-ingest.md        ← 2026-03-15 新增
+│   │   ├── SKILL_academic_search.md   ← 2026-03-15 新增（学术搜索技能感知）
+│   │   ├── SKILL_LIFECYCLE.md         ← 2026-03-16 新增（Skill 安装全流程规范）
+│   │   ├── guardian-core.md           ← 2026-03-16 新增（G1-G8 全场景安全防护）
+│   │   └── scrapling/                 ← 动态网页抓取
+│   └── security/                      ← 安全事件库（2026-03-16 建立）
+│       └── events/
+│           ├── clawhavoc.md           ← ClawHavoc 供应链攻击档案
+│           └── cve-2026-25253.md      ← WebSocket RCE 漏洞档案
 │
 ├── scripts/                           ← 虚拟机运行时脚本（不在 workspace 里）
 │   └── academic_search.py             ← 2026-03-15 新增：四源学术搜索脚本
@@ -670,6 +715,9 @@ openclaw-config/
 | **多模型体系** | ✅ **22个模型** | 含 Hunter/Healer Alpha（OpenRouter免费）、Qwen3、MiniMax M2.5等 |
 | **学术搜索工具** | ✅ **2026-03-15 新增** | academic_search.py：arXiv+OpenAlex+Crossref 三源，无需任何 key |
 | **能力感知加固** | ✅ **2026-03-15 完成** | SELF_KNOWLEDGE.md 末尾加入学术搜索能力章节，龙虾开新会话即知 |
+| **Guardian Core 安全防护** | ✅ **2026-03-16 部署** | G1-G8 全场景安全架构（guardian-core.md + SKILL_LIFECYCLE.md + security/events/） |
+| **AGENTS.md sha256 校验** | ✅ **2026-03-16 建立** | verify_agents.sh 实际校验，.agents_checksum 存储基准哈希 |
+| **requirements hash 锁** | ✅ **2026-03-16 生成** | VoxBridge/requirements.lock.txt，pip-compile --generate-hashes |
 
 ---
 
@@ -864,29 +912,9 @@ openclaw-config/
 - **位置**：`/home/xzy0626/.openclaw/scripts/academic_search.py`（虚拟机）
 - **适用范围**：OpenClaw 专属（VoxBridge 科研辅助）
 - **创建日期**：2026-03-15
-- **数据源**：
+- **数据源**：arXiv、OpenAlex、Crossref（无需 key）+ Semantic Scholar（需机构邮箱）
 
-| 数据源 | 论文量 | 优势 | Key 要求 |
-|--------|--------|------|---------|
-| arXiv | CS/ML/物理预印本 | 最新算法（提交即可查） | ✅ 无需 |
-| OpenAlex | 4.74 亿篇（全学科） | 覆盖最广，有摘要 | ✅ 无需 |
-| Crossref | 1.4 亿篇 DOI | 引用计数、期刊名、精确元数据 | ✅ 无需 |
-| Semantic Scholar | 2.14 亿篇 | 语义搜索、引用树 | ⚠️ 需机构邮箱申请 |
-
-- **调用方式**：
-  ```bash
-  # 标准三源搜索（推荐）
-  python3 /home/xzy0626/.openclaw/scripts/academic_search.py "关键词" --limit 8
-
-  # 限定年份
-  python3 /home/xzy0626/.openclaw/scripts/academic_search.py "关键词" --year-from 2022
-
-  # JSON 输出（程序解析）
-  python3 /home/xzy0626/.openclaw/scripts/academic_search.py "关键词" --json
-
-  # 精确 DOI 查找
-  python3 /home/xzy0626/.openclaw/scripts/academic_search.py --doi "10.48550/arXiv.2212.04356"
-  ```
+> 完整调用示例、VoxBridge 专属搜索词表、触发场景见 [学术搜索工具](#学术搜索工具academic_searchpy)
 
 ---
 
@@ -894,10 +922,11 @@ openclaw-config/
 
 | 能力 | 问题 | 建议 |
 |------|------|------|
-| **心跳 cron 触发** | `last_heartbeat.txt` 已存在，但触发 cron 未验证 | `crontab -l` 确认是否有心跳任务 |
+| **心跳 cron 触发** | crontab 已确认有 `upgrade-watch.sh`（5分钟）和 `sync_config_to_github.sh`（凌晨2点）；但专用心跳任务未单独配置 | 确认是否复用 upgrade-watch 作为心跳 |
 | **rule_sync_time.txt 格式验证** | 是否被定时任务正确写入未验证 | 手动检查格式是否与 AGENTS.md 解析逻辑匹配 |
 | **round_counter 计数逻辑** | 计数依赖龙虾自觉执行，无强制机制 | 在 rules-loader.md 里加强检查逻辑 |
 | **MEMORY.md（长期记忆汇总）** | 定义了但无实际内容 | 安排龙虾做一次「提炼长期记忆」任务 |
+| **HF Token 90天轮换提醒** | 无自动提醒机制 | 设置 cron，90天后发飞书提醒 |
 
 ---
 
@@ -915,4 +944,4 @@ openclaw-config/
 ---
 
 _本文档由 WorkBuddy 维护，所有 IP / 密钥 / Token 均已脱敏。_  
-_最后更新：2026-03-16_
+_最后更新：2026-03-16（安全加固 v3.0 + README 去重整理）_
