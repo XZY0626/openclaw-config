@@ -4,7 +4,7 @@
 
 > 其他 AI（WorkBuddy 等）的相关文件存放在各自的仓库，与本仓库分开管理。
 
-> **当前版本**：OpenClaw v2026.3.11 | **Gateway**：v2026.3.13 | **接入方式**：Tailscale HTTPS | **最后更新**：2026-03-15（新增学术搜索工具、激活可靠性审查）
+> **当前版本**：OpenClaw v2026.3.11 | **Gateway**：v2026.3.13 | **接入方式**：Tailscale HTTPS | **最后更新**：2026-03-16（安全加固 v2.5.1：删除 .pre-disable-auth 认证旁路、AGENTS.md 补全技能注册表、README 新增 Skills/Capabilities/Extensions 完整说明）
 
 ---
 
@@ -28,7 +28,12 @@
   - [定时任务（规则同步）](#定时任务规则同步)
 - [GitHub 仓库管理方案](#github-仓库管理方案)
 - [文件结构](#文件结构)
-- [龙虾现有能力 & 可提升方向](#龙虾现有能力--可提升方向)
+- [龙虾现有能力全景](#龙虾现有能力全景)
+  - [Skills 技能文件（共 9 个）](#-skills-技能文件共-9-个)
+  - [Capabilities 内置能力](#-capabilities-内置能力openClaw-原生)
+  - [Extensions / MCP 工具（共 4 个）](#-extensions--mcp-工具共-4-个)
+  - [独立工具（Scripts）](#-独立工具scripts)
+  - [未完全落地 & 未来升级](#-已设计但未完全落地的能力)
 
 ---
 
@@ -389,17 +394,19 @@ workspace/memory/
 
 技能文件是给龙虾看的「任务说明书」，告诉它遇到特定场景时该怎么做。
 
-| 技能 | 触发场景 | 核心能力 |
-|------|---------|---------|
-| `rules-loader.md` | 每次启动 | 合规门禁、规则加载、10轮重读机制 |
-| `task-planner.md` | 任意多步任务 | 任务拆解、依赖分析、进度展示 |
-| `workbuddy-dna.md` | 执行任务时 | 并行处理、清晰展示格式、错误处理范式 |
-| `github-sync.md` | 完成工作后 | 日志规范（openclaw目录）、pull-rebase 防冲突 |
-| `feishu-file-reader.md` | 飞书收到文件 | 文件解析、防 Prompt Injection 处理 |
-| `knowledge-notebook.md` | 需要检索历史知识 | NotebookLM 风格知识检索、记忆召回 |
-| `knowledge-ingest.md` | 主人要投喂新知识 | 知识收录流程、格式规范、存储到 memory/ |
-| `scrapling/` | 需要抓取动态网页 | Playwright 支持、JS 渲染页面抓取 |
-| `SKILL_academic_search.md` | 研究算法/查论文/技术调研 | 四源学术搜索感知文件，告知龙虾有此能力 |
+> **激活机制说明**：Skills 不会自动注入上下文，需要龙虾主动读取（基于 SELF_KNOWLEDGE.md 的能力感知），或由用户触发特定场景关键词，或通过 Memory Search 语义召回。
+
+| 技能文件 | 适用范围 | 触发场景 | 核心能力 | 作者 |
+|---------|---------|---------|---------|------|
+| `rules-loader.md` | **通用**（任何 AI） | 每次会话启动 | 合规门禁、L0 规则加载、10轮强制重读机制 | WorkBuddy |
+| `task-planner.md` | **通用** | 任意多步骤任务 | WorkBuddy 风格任务拆解、依赖分析、并行识别、进度展示 | WorkBuddy |
+| `workbuddy-dna.md` | **通用** | 执行任务期间 | 并行处理范式、结构化进度格式（✅⚠️📁）、错误处理模板 | WorkBuddy |
+| `github-sync.md` | **OpenClaw 专属** | 每次对话结束、需要同步时 | openclaw 日志目录规范（`logs/openclaw/`）、pull-rebase 防冲突、脱敏扫描 | WorkBuddy |
+| `feishu-file-reader.md` | **OpenClaw 专属** | 飞书收到文件/链接 | md/pdf/图片/视频解析，视频自动存 VoxBridge/samples/，防 Prompt Injection | WorkBuddy |
+| `knowledge-notebook.md` | **OpenClaw 专属** | 检索历史记忆/知识库问答 | NotebookLM 风格：语义检索→引用来源回答→摘要生成，不凭空编造 | WorkBuddy |
+| `knowledge-ingest.md` | **OpenClaw 专属** | 主人投喂新知识 | 四种投喂方式（粘贴/飞书/本地文件/写规则），知识笔记格式规范，自动触发索引重建 | WorkBuddy |
+| `SKILL_academic_search.md` | **OpenClaw 专属** | 查论文/找算法/技术调研 | 四源学术搜索感知文件：告知龙虾有此能力及调用时机，触发 `academic_search.py` | WorkBuddy |
+| `scrapling/SKILL.md` | **OpenClaw 专属** | 需要抓取动态/JS渲染网页 | Scrapling v0.4.2：静态+Playwright+反爬，支持 CSS 选择器批量提取和全站爬取 | WorkBuddy |
 
 **默认任务流水线**：
 ```
@@ -640,9 +647,9 @@ openclaw-config/
 
 ---
 
-## 龙虾现有能力 & 可提升方向
+## 龙虾现有能力全景
 
-### ✅ 已落地的能力
+### ✅ 已落地的核心能力
 
 | 能力 | 状态 | 说明 |
 |------|------|------|
@@ -657,33 +664,255 @@ openclaw-config/
 | 审批机制 | ✅ 已配置 | exec-approvals.json 白名单 |
 | 版本自检 | ✅ 已配置 | AGENTS.md checksum + 启动时验证 |
 | 记忆体系（日记） | ✅ 已配置 | memory/ 日记 + round_counter |
-| **Memory Search** | ✅ **正式运行** | **Qwen text-embedding-v3，65文件143块，Vector ready** |
-| **语义知识检索** | ✅ **正式运行** | **knowledge-notebook Skill，语义搜索历史记忆** |
-| **知识投喂** | ✅ **正式运行** | **knowledge-ingest Skill，主人可随时向记忆库写入新知识** |
-| **多模型体系** | ✅ **22个模型** | **含 Hunter/Healer Alpha（OpenRouter免费）、Qwen3、MiniMax M2.5等** |
-| **学术搜索工具** | ✅ **2026-03-15 新增** | **academic_search.py：arXiv+OpenAlex+Crossref 三源，无需任何 key** |
-| **能力感知加固** | ✅ **2026-03-15 完成** | **SELF_KNOWLEDGE.md 末尾加入学术搜索能力章节，龙虾开新会话即知** |
+| **Memory Search** | ✅ **正式运行** | Qwen text-embedding-v3，65文件143块，Vector ready |
+| **语义知识检索** | ✅ **正式运行** | knowledge-notebook Skill，NotebookLM 风格语义搜索 |
+| **知识投喂** | ✅ **正式运行** | knowledge-ingest Skill，主人可随时向记忆库写入新知识 |
+| **多模型体系** | ✅ **22个模型** | 含 Hunter/Healer Alpha（OpenRouter免费）、Qwen3、MiniMax M2.5等 |
+| **学术搜索工具** | ✅ **2026-03-15 新增** | academic_search.py：arXiv+OpenAlex+Crossref 三源，无需任何 key |
+| **能力感知加固** | ✅ **2026-03-15 完成** | SELF_KNOWLEDGE.md 末尾加入学术搜索能力章节，龙虾开新会话即知 |
 
-### 🟡 有设计但未完全落地的能力
+---
 
-| 能力 | 设计位置 | 问题 | 建议 |
-|------|---------|------|------|
-| **心跳 cron 触发** | AGENTS.md + last_heartbeat.txt | 文件已存在，但触发 cron 未验证 | 在虚拟机上 `crontab -l` 确认是否有心跳任务 |
-| **rule_sync_time.txt 验证** | AGENTS.md 启动检查清单第 8 项 | 文件格式是否被定时任务正确维护未验证 | 定时任务写入后验证文件内容格式是否正确 |
-| **round_counter.txt** | AGENTS.md 第 7 项 | 龙虾能读写，但计数逻辑依赖龙虾自觉执行 | 可在 rules-loader.md 里加强检查逻辑 |
-| **MEMORY.md（长期记忆）** | AGENTS.md Memory 章节 | 定义了但未见到有实际内容 | 安排龙虾做一次「整理长期记忆」任务，把之前操作日志里的重要内容提炼进去 |
+## 🧩 Skills / Capabilities / Extensions 完整说明
+
+> **三类概念的区分**：
+> - **Skill（技能）**：存放在 `workspace/skills/` 的 Markdown 说明书，描述特定场景的工作流程，龙虾读后照执行。
+> - **Capability（内置能力）**：OpenClaw 平台本身提供的原生功能（如 Memory Search、模型切换、命令执行）。
+> - **Extension / MCP 工具**：通过 MCP 协议接入的外部工具进程，挂载在 `openclaw.json` 中。
+
+---
+
+### 📘 Skills 技能文件（共 9 个）
+
+> 存放位置：`workspace/skills/`  
+> 适用范围：标注了是否仅限 OpenClaw（龙虾），还是可移植到其他 AI
+
+#### 1. `rules-loader.md` — 合规门禁
+- **适用范围**：通用（任何 AI 可沿用）
+- **作者**：WorkBuddy
+- **何时触发**：每次会话启动时自动加载
+- **核心能力**：
+  - 读取并验证 `AI_RULES.md` L0 层规则
+  - 每隔 10 轮对话强制重读，防止规则被「聊忘了」
+  - `rule_sync_time.txt` 超 48h 提醒主人检查定时同步任务
+- **影响**：这是整个安全体系的第一道关卡，L0 被跳过的风险在此拦截
+
+---
+
+#### 2. `task-planner.md` — 任务规划器
+- **适用范围**：通用（WorkBuddy DNA 传授）
+- **作者**：WorkBuddy
+- **何时触发**：任意多步骤任务开始时
+- **核心能力**：
+  - 分析任务依赖图，识别可并行的子任务
+  - 生成带编号的计划清单（`[并行]` / `[依赖步骤X]` 标注）
+  - 展示执行进度（`⏳ 执行中` / `✅ 完成` / `⚠️ 注意`）
+- **典型输出格式**：
+  ```
+  📋 任务计划：
+    1. [并行] 步骤A + 步骤B
+    2. 步骤C（依赖步骤A结果）
+  ```
+
+---
+
+#### 3. `workbuddy-dna.md` — WorkBuddy 工作方式传承
+- **适用范围**：通用（WorkBuddy DNA 传授）
+- **作者**：WorkBuddy
+- **何时触发**：执行任务期间
+- **核心能力**：
+  - 并行处理：识别独立子任务，同时发起，合并结果
+  - 清晰汇报格式：开始列计划，执行中说原因，结束用结构化格式汇报
+  - 错误处理范式：出错必须说「原因 + 影响范围 + 可选方案」，不能静默忽略
+- **设计初衷**：WorkBuddy 把自己的工作方式「基因传授」给龙虾，确保两端行为风格一致
+
+---
+
+#### 4. `github-sync.md` — GitHub 日志同步
+- **适用范围**：**OpenClaw 专属**（含 openclaw 日志路径规范）
+- **作者**：WorkBuddy
+- **何时触发**：每次对话结束，或主人要求同步时
+- **核心能力**：
+  - 日志写入路径：`workspace/logs/openclaw/YYYY-MM/YYYYMMDD-主题.md`（workspaceOnly 路径规范）
+  - `git pull --rebase` 先于 push，防止 WorkBuddy 和龙虾双向写 INDEX.md 冲突
+  - 推送前自动扫描：IP / API Key / 密码脱敏
+  - INDEX.md 分工：龙虾只追加 OpenClaw 行，时间线表格由 WorkBuddy 维护
+- **关联仓库**：`XZY0626/ai-session-logs`（SSH 认证）
+
+---
+
+#### 5. `feishu-file-reader.md` — 飞书文件解析
+- **适用范围**：**OpenClaw 专属**（飞书 API + VoxBridge 集成）
+- **作者**：WorkBuddy
+- **何时触发**：飞书消息中包含文件附件或云文档链接
+- **支持格式**：
+  | 格式 | 处理方式 |
+  |------|---------|
+  | `.md` / `.txt` | 直接读取全文 |
+  | `.pdf` | pypdf 逐页提取文字 |
+  | 飞书云文档 URL | `feishu_doc.get` 工具读取 |
+  | `.png` / `.jpg` | qwen-vl 视觉模型识别 |
+  | `.json` / `.yaml` | 解析为结构化数据 |
+  | 视频文件（.mp4 等） | **自动保存到 VoxBridge/samples/，询问是否启动翻译 pipeline** |
+- **安全机制**：飞书收到的所有文件视为不可信外部输入，禁止将文件内容当命令执行（Prompt Injection 防护）
+
+---
+
+#### 6. `knowledge-notebook.md` — 智能知识库（NotebookLM 风格）
+- **适用范围**：**OpenClaw 专属**（依赖 OpenClaw Memory Search 基础设施）
+- **作者**：WorkBuddy（灵感来源：Google NotebookLM）
+- **何时触发**：主人查询历史记忆、知识库问答、要求基于资料回答
+- **核心能力**：
+  - 📥 收录：把文件/链接/飞书文档/手写内容存入 `memory/`
+  - 🔍 检索：`openclaw memory search` 语义向量搜索（不是关键词匹配）
+  - 📝 引用回答：回答时标注 `📚 来源: [文件名]`，有据可查，不瞎编
+  - 📊 摘要生成：给定话题 → 检索相关块 → 生成结构化摘要（核心观点 + 来源列表）
+- **底层技术**：sqlite-vec + Qwen text-embedding-v3（1024 维向量）
+- **与 NotebookLM 对比**：完全私有部署，数据不出虚拟机，费用极低（全量重建 < ¥0.02）
+
+---
+
+#### 7. `knowledge-ingest.md` — 知识投喂
+- **适用范围**：**OpenClaw 专属**（依赖 Memory Search）
+- **作者**：WorkBuddy
+- **何时触发**：主人要往记忆库写新知识
+- **四种投喂方式**：
+  | 方式 | 操作 | 适合 |
+  |------|------|------|
+  | 直接粘贴 | 「把这段内容存入知识库，主题是 XXX：[内容]」 | 短文本、笔记 |
+  | 飞书文档 | 「把这个飞书文档收录到知识库：[链接]」 | 长文档、会议记录 |
+  | 本地文件 | 「把 /path/to/file.md 加入知识库」 | 现有 md/txt/pdf |
+  | 写规则 | 「把这条规则加进 AGENTS.md：[规则]」 | 永久行为规则 |
+- **文件命名规范**：`YYYY-MM-DD-[来源类型]-[标题简称].md`
+- **验证方法**：投喂后执行 `openclaw memory search "关键词"` 确认 score > 0.4
+
+---
+
+#### 8. `SKILL_academic_search.md` — 学术论文四源搜索感知
+- **适用范围**：**OpenClaw 专属**（依赖 `academic_search.py` 脚本）
+- **作者**：WorkBuddy
+- **何时触发**：主人提到查论文/找算法/技术调研
+- **核心功能**：这是一个「能力感知文件」，告知龙虾：
+  - 自己拥有 `academic_search.py` 工具（四源学术搜索）
+  - 何时应该主动调用（不要说「我的知识截止到某年」）
+  - 调用方式和参数
+- **底层工具**：`/home/xzy0626/.openclaw/scripts/academic_search.py`（见下方 Capabilities 章节）
+
+---
+
+#### 9. `scrapling/SKILL.md` — 自适应网页爬虫
+- **适用范围**：**OpenClaw 专属**（依赖 Python scrapling 库）
+- **作者**：WorkBuddy（集成 D4Vinci/Scrapling v0.4.2）
+- **安装日期**：2026-03-15
+- **测试状态**：待集成（已安装，接口已定义，尚未生产验证）
+- **何时触发**：需要抓取 JS 渲染的动态网页、进行反爬场景
+- **核心能力**：
+  - `fetch_html(url, mode='auto')` — 静态/动态自动切换
+  - `extract_data(html, selectors)` — CSS 选择器批量提取
+  - `crawl_site(start_url, rules, max_pages)` — 自动化全站爬取
+  - Playwright 浏览器自动化（stealth 模式）
+  - 反爬对抗：随机 UA、请求延迟、IP 代理池
+- **与 fetch MCP 的区别**：fetch MCP 只能抓静态 HTML；scrapling 能渲染 JS，适合 SPA 和需要登录的页面
+- **依赖**：`pip install scrapling[live]` + `playwright install chromium`
+
+---
+
+### ⚡ Capabilities 内置能力（OpenClaw 原生）
+
+| 能力 | 描述 | 配置位置 | 状态 |
+|------|------|---------|------|
+| **Memory Search（语义记忆检索）** | 将对话和文件转为向量，支持语义相似度搜索；自动把检索到的文档片段注入对话上下文 | `openclaw.json` → `agents.defaults.memorySearch` | ✅ 运行中 |
+| **多模型路由** | 22 个模型别名，支持运行时切换；不同任务指定不同模型 | `openclaw.json` → `models[]` | ✅ 运行中 |
+| **命令执行（exec）** | 执行 shell 命令，带审批白名单（exec-approvals.json）；高危命令通过飞书等待审批 | `openclaw.json` + `openclaw-config/exec-approvals.json` | ✅ 运行中 |
+| **文件读写（workspace）** | 默认限制在 `~/.openclaw/workspace/` 内；workspace 外需要主人当次对话明确授权 | `openclaw.json` → `workspaceOnly: true` | ✅ 运行中 |
+| **飞书长连接（Bot）** | 接收飞书消息 → 调用 AI → 回复；支持文件/消息/云文档 | `feishu-bot/feishu_stepfun_bot.py` | ✅ 运行中 |
+| **心跳机制** | 定期（≤2h）自动检查：gateway 存活、规则文件完整性、同步时间戳；写入 `last_heartbeat.txt` | `AGENTS.md` + `memory/last_heartbeat.txt` | 🟡 文件机制已落地，cron 触发待验证 |
+| **版本自检** | 会话启动时验证 `AGENTS.md` 版本标记（`MODIFIED v5`）；标记丢失即停止工作并告警 | `AGENTS.md` 启动脚本 | ✅ 运行中 |
+| **规则轮次重读** | 对话轮数计数器，每 10 轮强制重读 AI_RULES.md；防止规则被长对话「稀释」 | `memory/round_counter.txt` | ✅ 运行中 |
+| **DUAL-SYNC 双端同步** | WorkBuddy 和龙虾共用 openclaw-config 仓库；任何一方修改配置后均同步到 GitHub | `scripts/sync_config_to_github.sh` | ✅ 运行中 |
+
+---
+
+### 🔌 Extensions / MCP 工具（共 4 个）
+
+> MCP（Model Context Protocol）：OpenClaw 连接外部工具的标准协议，每个工具是一个独立进程，通过 stdio 与 gateway 通信。
+
+| 工具 | 版本 | 适用范围 | 核心能力 | 安装位置 |
+|------|------|---------|---------|---------|
+| **filesystem** | 2026.1.14 | **通用** | 文件读写、目录列举、文件名搜索；访问范围限定 `/home/xzy0626` | `~/.local/lib/node_modules/@modelcontextprotocol/server-filesystem/` |
+| **fetch** | 2025.4.7 | **通用** | 抓取网页并转为 Markdown，适合静态文档/博客/API 文档；JS 渲染场景需配合 scrapling | `~/.local/bin/mcp-server-fetch` |
+| **websearch** | 1.0.3 | **通用** | 联网搜索，无需 API key；质量中等（可选升级 Tavily 提升质量） | `~/.local/lib/node_modules/websearch-mcp/` |
+| **desktop-commander** | 0.2.38 | **通用** | 命令执行增强（流式读取大文件、ripgrep 代码搜索、进程管理）；相比原生 exec 更强 | `~/.local/lib/node_modules/@wonderwhy-er/desktop-commander/` |
+
+**MCP 工具决策树**：
+
+```
+需要操作文件/目录  →  filesystem MCP
+需要看网页内容    →  fetch MCP（URL 已知）
+                  →  scrapling Skill（需要 JS 渲染）
+需要搜索互联网    →  websearch MCP
+需要执行命令/搜代码/管进程  →  desktop-commander MCP（优先于原生 exec）
+飞书收到文件      →  feishu-file-reader Skill（先解析，再处理）
+```
+
+---
+
+### 📚 独立工具（Scripts）
+
+#### `academic_search.py` — 四源学术论文搜索
+
+- **位置**：`/home/xzy0626/.openclaw/scripts/academic_search.py`（虚拟机）
+- **适用范围**：OpenClaw 专属（VoxBridge 科研辅助）
+- **创建日期**：2026-03-15
+- **数据源**：
+
+| 数据源 | 论文量 | 优势 | Key 要求 |
+|--------|--------|------|---------|
+| arXiv | CS/ML/物理预印本 | 最新算法（提交即可查） | ✅ 无需 |
+| OpenAlex | 4.74 亿篇（全学科） | 覆盖最广，有摘要 | ✅ 无需 |
+| Crossref | 1.4 亿篇 DOI | 引用计数、期刊名、精确元数据 | ✅ 无需 |
+| Semantic Scholar | 2.14 亿篇 | 语义搜索、引用树 | ⚠️ 需机构邮箱申请 |
+
+- **调用方式**：
+  ```bash
+  # 标准三源搜索（推荐）
+  python3 /home/xzy0626/.openclaw/scripts/academic_search.py "关键词" --limit 8
+
+  # 限定年份
+  python3 /home/xzy0626/.openclaw/scripts/academic_search.py "关键词" --year-from 2022
+
+  # JSON 输出（程序解析）
+  python3 /home/xzy0626/.openclaw/scripts/academic_search.py "关键词" --json
+
+  # 精确 DOI 查找
+  python3 /home/xzy0626/.openclaw/scripts/academic_search.py --doi "10.48550/arXiv.2212.04356"
+  ```
+
+---
+
+### 🟡 已设计但未完全落地的能力
+
+| 能力 | 问题 | 建议 |
+|------|------|------|
+| **心跳 cron 触发** | `last_heartbeat.txt` 已存在，但触发 cron 未验证 | `crontab -l` 确认是否有心跳任务 |
+| **rule_sync_time.txt 格式验证** | 是否被定时任务正确写入未验证 | 手动检查格式是否与 AGENTS.md 解析逻辑匹配 |
+| **round_counter 计数逻辑** | 计数依赖龙虾自觉执行，无强制机制 | 在 rules-loader.md 里加强检查逻辑 |
+| **MEMORY.md（长期记忆汇总）** | 定义了但无实际内容 | 安排龙虾做一次「提炼长期记忆」任务 |
+
+---
 
 ### 🔮 已评估但暂未实施的升级
 
 | 升级方向 | 触发条件 | 优先级 |
 |---------|---------|--------|
 | `@playwright/mcp` | fetch 抓不到 JS 渲染页面时（scrapling 已部分覆盖） | 中（遇到再装） |
-| Tavily MCP | 需要更高质量搜索时 | 低（有 API key 再装） |
-| n8n 工作流编排 | VM 内存≥8GB 或 VoxBridge 需对接第三方 API | 低 |
-| 心跳 cron 配置 | 下次检查时顺手做掉 | 中 |
-| 语音交互（STT/TTS） | VoxBridge pipeline 稳定后 | 未来 |
+| Tavily MCP | 需要更高质量搜索结果 | 低（申请 API key 后） |
+| n8n 工作流编排 | VM 内存 ≥ 8GB，VoxBridge 需对接第三方 API | 低 |
+| 心跳 cron 配置 | 下次例行检查时顺手完成 | 中 |
+| 语音交互（STT/TTS 集成龙虾） | VoxBridge pipeline 稳定后 | 未来 |
+| Semantic Scholar key | 有机构邮箱时申请 | 低（现有三源已满足） |
 
 ---
 
 _本文档由 WorkBuddy 维护，所有 IP / 密钥 / Token 均已脱敏。_  
-_最后更新：2026-03-15_
+_最后更新：2026-03-16_
