@@ -1,6 +1,6 @@
 # AGENTS.md - Your Workspace
-# ⚠️ MODIFIED v5: Skills Table Completed + TOOLS.md Startup + Heartbeat Health Check
-# CHECKSUM: v5-2026-03-15 (WorkBuddy signed)
+# ⚠️ MODIFIED v6: scrapling Registered + Auth Bypass Clause + Healthcheck Script
+# CHECKSUM: v6-2026-03-16 (WorkBuddy signed)
 
 ---
 
@@ -144,7 +144,7 @@ Never cat the file directly in a context that will be shown to users or logs.
 | `skills/knowledge-notebook.md` | Query historical memory and work logs with semantic search; fuzzy Q&A and knowledge retrieval |
 | `skills/knowledge-ingest.md` | Write new knowledge into memory store; owner can feed fragments anytime |
 | `skills/SKILL_academic_search.md` | Four-source academic search (arXiv + OpenAlex + Crossref + S2); use when owner needs literature |
-| `skills/scrapling/SKILL.md` | Web scraping & browser automation — static fetch, JS rendering, anti-bot bypass; use when owner needs to extract web content or automate browser interactions |
+| `skills/scrapling/` | Adaptive web scraping — static/dynamic/browser automation, anti-bot; use when fetch MCP fails or JS rendering needed |
 
 **Default task pipeline:**
 ```
