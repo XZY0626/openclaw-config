@@ -4,7 +4,7 @@
 
 > 其他 AI（WorkBuddy 等）的相关文件存放在各自的仓库，与本仓库分开管理。
 
-> **当前版本**：OpenClaw v2026.3.11 | **Gateway**：v2026.3.13 | **接入方式**：Tailscale HTTPS | **最后更新**：2026-03-16（安全加固 v3.0：Guardian Core 全场景安全防护体系 + AGENTS.md sha256 校验 + requirements hash 锁 + SKILL_LIFECYCLE.md）
+> **当前版本**：OpenClaw v2026.3.11 | **Gateway**：v2026.3.13 | **接入方式**：Tailscale HTTPS | **最后更新**：2026-03-16（安全加固 v3.1：scrapling 注册 + AI_RULES L0.10 认证旁路禁止 + healthcheck.sh + Guardian Core v1.1.0 + 内部审计事件录入）
 
 ---
 
@@ -30,7 +30,7 @@
 - [GitHub 仓库管理方案](#github-仓库管理方案)
 - [文件结构](#文件结构)
 - [龙虾现有能力全景](#龙虾现有能力全景)
-  - [Skills 技能文件（共 9 个）](#-skills-技能文件共-9-个)
+  - [Skills 技能文件（共 11 个）](#-skills-技能文件共-11-个)
   - [Capabilities 内置能力](#-capabilities-内置能力openClaw-原生)
   - [Extensions / MCP 工具（共 4 个）](#-extensions--mcp-工具共-4-个)
   - [独立工具（Scripts）](#-独立工具scripts)
@@ -102,17 +102,17 @@
 ## 安全防护体系（Guardian Core）
 
 > 参考 360安全卫士 / CrowdStrike Falcon 分层防护设计，于 2026-03-16 部署。  
-> 核心文件：`workspace/skills/guardian-core.md`（SIGNED v1，WorkBuddy signed）
+> 核心文件：`workspace/skills/guardian-core.md`（SIGNED v1.1.0，WorkBuddy signed）
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│              Guardian Core v1.0                     │
+│              Guardian Core v1.1.0                   │
 │          OpenClaw 全场景安全防护体系                  │
 ├─────────────────────────────────────────────────────┤
-│ G1 启动护盾 │ 文件完整性校验 + denylist 验证          │
+│ G1 启动护盾 │ healthcheck.sh + 文件完整性校验          │
 │ G2 输入过滤 │ Prompt Injection 检测 + 来源标记         │
 │ G3 行为监控 │ 危险命令拦截 + 文件写入监控              │
-│ G4 供应链防御│ Skill 白名单 + 自动安装封锁              │
+│ G4 供应链防御│ Skill 白名单 + 注册完整性 + 自动安装封锁  │
 │ G5 数据保护 │ 敏感路径访问控制 + 输出脱敏              │
 │ G6 事件响应 │ P0/P1/P2 三级告警 + 事件记录             │
 │ G7 情报更新 │ 安全事件库 + 规则迭代流程               │
@@ -124,11 +124,13 @@
 
 | 机制 | 路径 | 说明 |
 |------|------|------|
+| **一键健康检查** | `scripts/healthcheck.sh` | G1 启动护盾：7 项检查（checksum / 认证旁路 / Gateway / 端口 / denylist / 权限 / hash 锁） |
 | AGENTS.md 完整性校验 | `workspace/.agents_checksum` + `workspace/verify_agents.sh` | sha256 实际校验，修改后执行 `--update` 更新 |
 | Skill 安装全流程规范 | `workspace/skills/SKILL_LIFECYCLE.md` | 6步安全审查：预审批→扫描→隔离测试→准入→注册→审计 |
 | 供应链封锁 | `openclaw.json → skills.denylist` | 封锁 `clawhub/*`、`npm:*`、`npx:*`；`autoInstall: false` |
-| 安全事件库 | `workspace/security/events/` | 已收录：ClawHavoc 供应链攻击、CVE-2026-25253 RCE 漏洞 |
-| requirements hash 锁 | `VoxBridge/requirements.lock.txt` | pip-compile --generate-hashes，防止依赖包被篡改 |
+| 认证旁路禁止（AI 层） | `workspace/AI_RULES.md L0.10` | 明文禁止 `.pre-disable-auth` / `gateway.auth` 修改，L0 不可覆盖 |
+| 安全事件库 | `workspace/security/events/` | 已收录：ClawHavoc 供应链攻击、CVE-2026-25253 RCE、内部审计 2026-03-16 |
+| requirements hash 锁 | `VoxBridge/requirements.lock.txt` | pip-compile --generate-hashes，3407 条 sha256，防止依赖包被篡改 |
 
 ### 待完成项
 
@@ -229,9 +231,9 @@ loginctl linger=yes   # 即使没登录，用户级 systemd 也会运行
 ```
 workspace/
 ├── AGENTS.md          ← 🔑 启动规程（最先读，最高优先级）
-│                         v4：包含 L0 硬性拒绝表、启动检查清单
-├── AI_RULES.md        ← ⛔ 安全规则（L0-L5 完整规则体系）
-│                         v2.4.0-lobster，适配 Linux 环境
+│                         v6：scrapling 注册 + L0.10 条款 + healthcheck
+├── AI_RULES.md        ← ⛔ 安全规则（L0-L4 完整规则体系）
+│                         v4：含 L0.10 认证旁路禁止条款
 ├── SOUL.md            ← 💙 龙虾的性格、原则、工作习惯、语气
 ├── USER.md            ← 👤 主人是谁、工作风格、基础设施（脱敏）
 ├── SELF_KNOWLEDGE.md  ← 🔍 龙虾的能力说明书（WorkBuddy 怎么配置的）
@@ -246,7 +248,9 @@ workspace/
     ├── knowledge-notebook.md   ← 2026-03-15 新增
     ├── knowledge-ingest.md     ← 2026-03-15 新增
     ├── SKILL_academic_search.md ← 2026-03-15 新增：四源学术搜索感知文件
-    └── scrapling/              ← 动态网页抓取（Playwright 支持）
+    ├── SKILL_LIFECYCLE.md       ← 2026-03-16 新增：Skill 安装全流程规范
+    ├── guardian-core.md         ← 2026-03-16 新增：G1-G8 全场景安全防护（v1.1.0）
+    └── scrapling/              ← 动态网页抓取（Playwright 支持，2026-03-16 注册）
 ```
 
 **规则优先级**（从高到低）：
@@ -626,8 +630,8 @@ openclaw-config/
 ├── README.md                          ← 本文件（架构说明）
 │
 ├── workspace/                         ← ⭐ 龙虾规则文件体系（虚拟机镜像）
-│   ├── AGENTS.md                      ← 启动规程（v5，L0 硬性拒绝 + 技能注册表）
-│   ├── AI_RULES.md                    ← 安全规则 v3（L0-L4，含供应链、隐私保护）
+│   ├── AGENTS.md                      ← 启动规程（v6，L0 硬性拒绝 + scrapling 注册）
+│   ├── AI_RULES.md                    ← 安全规则 v4（L0-L4，含 L0.10 认证旁路禁止）
 │   ├── SOUL.md                        ← 性格与原则（v2，含 Prompt Injection 防护）
 │   ├── USER.md                        ← 主人档案（脱敏）
 │   ├── SELF_KNOWLEDGE.md              ← 龙虾自我认知（含 WorkBuddy 配置说明）
@@ -645,15 +649,17 @@ openclaw-config/
 │   │   ├── knowledge-ingest.md        ← 2026-03-15 新增
 │   │   ├── SKILL_academic_search.md   ← 2026-03-15 新增（学术搜索技能感知）
 │   │   ├── SKILL_LIFECYCLE.md         ← 2026-03-16 新增（Skill 安装全流程规范）
-│   │   ├── guardian-core.md           ← 2026-03-16 新增（G1-G8 全场景安全防护）
-│   │   └── scrapling/                 ← 动态网页抓取
+│   │   ├── guardian-core.md           ← 2026-03-16 新增（G1-G8 全场景安全防护 v1.1.0）
+│   │   └── scrapling/                 ← 动态网页抓取（2026-03-16 注册到 AGENTS.md）
 │   └── security/                      ← 安全事件库（2026-03-16 建立）
 │       └── events/
 │           ├── clawhavoc.md           ← ClawHavoc 供应链攻击档案
-│           └── cve-2026-25253.md      ← WebSocket RCE 漏洞档案
+│           ├── cve-2026-25253.md      ← WebSocket RCE 漏洞档案
+│           └── audit-2026-03-16.md    ← 内部审计发现（scrapling注册/L0.10盲区/healthcheck）
 │
 ├── scripts/                           ← 虚拟机运行时脚本（不在 workspace 里）
-│   └── academic_search.py             ← 2026-03-15 新增：四源学术搜索脚本
+│   ├── academic_search.py             ← 2026-03-15 新增：四源学术搜索脚本
+│   └── healthcheck.sh                 ← 2026-03-16 新增：G1 启动健康检查（7项）
 │
 ├── feishu-bot/                        ← 飞书机器人
 │   ├── feishu_stepfun_bot.py
@@ -718,6 +724,10 @@ openclaw-config/
 | **Guardian Core 安全防护** | ✅ **2026-03-16 部署** | G1-G8 全场景安全架构（guardian-core.md + SKILL_LIFECYCLE.md + security/events/） |
 | **AGENTS.md sha256 校验** | ✅ **2026-03-16 建立** | verify_agents.sh 实际校验，.agents_checksum 存储基准哈希 |
 | **requirements hash 锁** | ✅ **2026-03-16 生成** | VoxBridge/requirements.lock.txt，pip-compile --generate-hashes |
+| **scrapling 技能注册** | ✅ **2026-03-16 补录** | AGENTS.md v6 技能注册表录入，新会话可感知 |
+| **AI_RULES L0.10 认证旁路禁止** | ✅ **2026-03-16 新增** | 明文禁止 .pre-disable-auth + gateway.auth 修改，L0 不可覆盖 |
+| **一键健康检查脚本** | ✅ **2026-03-16 新增** | healthcheck.sh 7项检查，首次执行全 PASS |
+| **Guardian Core v1.1.0 升级** | ✅ **2026-03-16 升级** | G1 补充 healthcheck.sh；G4 补充技能注册完整性检查 |
 
 ---
 
@@ -730,7 +740,7 @@ openclaw-config/
 
 ---
 
-### 📘 Skills 技能文件（共 9 个）
+### 📘 Skills 技能文件（共 11 个）
 
 > 存放位置：`workspace/skills/`  
 > 适用范围：标注了是否仅限 OpenClaw（龙虾），还是可移植到其他 AI
@@ -851,7 +861,7 @@ openclaw-config/
 #### 9. `scrapling/SKILL.md` — 自适应网页爬虫
 - **适用范围**：**OpenClaw 专属**（依赖 Python scrapling 库）
 - **作者**：WorkBuddy（集成 D4Vinci/Scrapling v0.4.2）
-- **安装日期**：2026-03-15
+- **安装日期**：2026-03-15 | **注册日期**：2026-03-16（内部审计补录）
 - **测试状态**：待集成（已安装，接口已定义，尚未生产验证）
 - **何时触发**：需要抓取 JS 渲染的动态网页、进行反爬场景
 - **核心能力**：
@@ -865,6 +875,42 @@ openclaw-config/
 
 ---
 
+#### 10. `guardian-core.md` — 全场景安全防护体系
+- **适用范围**：**OpenClaw 专属**（安全规范文档，受 L0.8 保护）
+- **作者**：WorkBuddy（参考 360安全卫士 / CrowdStrike Falcon）
+- **部署日期**：2026-03-16 | **当前版本**：v1.1.0
+- **何时触发**：龙虾启动时读取，安全事件响应时参考，每次安全加固时更新
+- **核心内容**：G1-G8 共 8 个防护层的完整规范
+  | 层级 | 功能 | v1.1 新增 |
+  |------|------|---------|
+  | G1 启动护盾 | healthcheck.sh + AGENTS.md 校验 | G1.0 健康检查脚本说明 |
+  | G2 输入过滤 | Prompt Injection 检测 | — |
+  | G3 行为监控 | 危险命令拦截 | — |
+  | G4 供应链防御 | Skill 白名单 + 封锁 | G4.1b 技能注册完整性检查 |
+  | G5 数据保护 | 敏感路径 + 输出脱敏 | — |
+  | G6 事件响应 | P0/P1/P2 三级告警 | — |
+  | G7 情报更新 | 安全事件库 + 规则迭代 | — |
+  | G8 多用户墙 | 双向隔离边界 | — |
+- **保护级别**：CRITICAL — 仅 WorkBuddy 授权或主人明确指令可修改
+
+---
+
+#### 11. `SKILL_LIFECYCLE.md` — Skill 安装全流程规范
+- **适用范围**：**OpenClaw 专属**（安装外部 Skill 的操作规范）
+- **作者**：WorkBuddy
+- **部署日期**：2026-03-16
+- **何时触发**：安装任何新 Skill 之前必须阅读并执行
+- **核心内容**：6 步安全审查流程
+  1. **预审批**：告知主人、说明来源和风险
+  2. **内容扫描**：检查恶意代码、数据外传、规则篡改等 IOC
+  3. **隔离测试**：在 `/tmp/skill-sandbox/` 测试，不影响主环境
+  4. **准入决策**：主人确认后才安装
+  5. **注册**：更新 AGENTS.md 技能注册表（此步骤不可省略）
+  6. **审计归档**：写操作日志，记录安装详情
+- **已知遗漏案例**：scrapling（安装时跳过了第 5 步，2026-03-16 审计发现并补录）
+
+---
+
 ### ⚡ Capabilities 内置能力（OpenClaw 原生）
 
 | 能力 | 描述 | 配置位置 | 状态 |
@@ -875,7 +921,7 @@ openclaw-config/
 | **文件读写（workspace）** | 默认限制在 `~/.openclaw/workspace/` 内；workspace 外需要主人当次对话明确授权 | `openclaw.json` → `workspaceOnly: true` | ✅ 运行中 |
 | **飞书长连接（Bot）** | 接收飞书消息 → 调用 AI → 回复；支持文件/消息/云文档 | `feishu-bot/feishu_stepfun_bot.py` | ✅ 运行中 |
 | **心跳机制** | 定期（≤2h）自动检查：gateway 存活、规则文件完整性、同步时间戳；写入 `last_heartbeat.txt` | `AGENTS.md` + `memory/last_heartbeat.txt` | 🟡 文件机制已落地，cron 触发待验证 |
-| **版本自检** | 会话启动时验证 `AGENTS.md` 版本标记（`MODIFIED v5`）；标记丢失即停止工作并告警 | `AGENTS.md` 启动脚本 | ✅ 运行中 |
+| **版本自检** | 会话启动时验证 `AGENTS.md` 版本标记（`MODIFIED v6`）；标记丢失即停止工作并告警 | `AGENTS.md` 启动脚本 | ✅ 运行中 |
 | **规则轮次重读** | 对话轮数计数器，每 10 轮强制重读 AI_RULES.md；防止规则被长对话「稀释」 | `memory/round_counter.txt` | ✅ 运行中 |
 | **DUAL-SYNC 双端同步** | WorkBuddy 和龙虾共用 openclaw-config 仓库；任何一方修改配置后均同步到 GitHub | `scripts/sync_config_to_github.sh` | ✅ 运行中 |
 
@@ -944,4 +990,4 @@ openclaw-config/
 ---
 
 _本文档由 WorkBuddy 维护，所有 IP / 密钥 / Token 均已脱敏。_  
-_最后更新：2026-03-16（安全加固 v3.0 + README 去重整理）_
+_最后更新：2026-03-16（安全加固 v3.1：scrapling 注册 + L0.10 认证旁路禁止 + healthcheck.sh + Guardian Core v1.1.0 + README 同步更新）_
